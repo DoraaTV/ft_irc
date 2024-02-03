@@ -1,33 +1,22 @@
-#include "Server.hpp"
+#include "Serveur.hpp"
+#include "Client.hpp"
 
-struct sockaddr_in	s_in;
-
-
-
-int main(int ac, char** av)
-{
-    Server server;
-    socklen_t userlen = sizeof(s_in);
-    if (ac != 2)
+int main(int ac, char **av) {
+    if (ac != 2 || std::strlen(av[1]) > 5)
     {
-        std::cout << "\031usage: ./" << av[0] << " <port>" << std::endl;
-        exit(1);
+        std::cout << "usage: ./irc <port>" << std::endl;
+        return (1);
     }
-    server.createServer(atoi(av[1]));
-    int user = accept(server.getSocket(), (struct sockaddr*)server.getcsin(), &userlen);
-    while (true)
+    int port = std::atoi(av[1]);
+    if (port <= 0)
     {
-        char buffer[1024] = {0};
-        if (int i = read(user, buffer, 1023) > 0)
-        {
-            std::cout << "Recieved: " << buffer << std::endl;
-            send(user, "you have sent successfully: ", 28, 0);
-            send(user, buffer, std::strlen(buffer), 0);
-        }
-        else
-            break;
+        std::cout << "port must be between 1 and 99999" << std::endl;
+        return (1);
     }
-    close(user);
-    close(server.getSocket());
-    return(0);
+    Server server(port);
+    server.bindSocket();
+    server.listenForConnections();
+    server.start();
+
+    return 0;
 }
