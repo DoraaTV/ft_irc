@@ -144,6 +144,7 @@ void Server::handleExistingConnection(int clientSocket) {
         //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
         else
         {
+            //command COMMENCER PAR JOIN (create si existe pas)
             std::vector<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
             if (senderClient != _clients.end()) {
                 std::string message = "\n" + senderClient->_name + ": " + buffer + "\0";
