@@ -1,4 +1,5 @@
 #include "Serveur.hpp"
+#include "Channel.hpp"
 
 struct ClientFinder {
         int socketToFind;
@@ -80,7 +81,7 @@ void Server::handleNewConnection(int _serverSocket) {
         std::cerr << "Error accepting connection" << std::endl;
         return;
     }
-    
+
     FD_SET(clientSocket, &_masterSet);
     if (clientSocket > _maxFd)
         _maxFd = clientSocket;
@@ -123,7 +124,7 @@ void Server::handleExistingConnection(int clientSocket) {
             }
         }
     } else {
-        
+
         std::cout << "Received from socket " << clientSocket << ": " << buffer << std::endl;
         //choisir un nom à la connexion
         if (it != _clients.end() && it->_name.empty() && buffer[0] != '\0') //le parsing devra check si le name est valid !!!!
@@ -147,8 +148,26 @@ void Server::handleExistingConnection(int clientSocket) {
             //command COMMENCER PAR JOIN (create si existe pas)
             std::vector<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
             if (senderClient != _clients.end()) {
-                std::string message = "\n" + senderClient->_name + ": " + buffer + "\0";
-                broadcastMessage(clientSocket, message);
+                //commande
+                if (buffer[0] == '/') {
+                    //if channel already exists join it, if not create it
+                    if (!strncmp(buffer, "/JOIN ", 6)) {
+                        std::string channelName = buffer + 6;
+                        channelName.erase(channelName.length() - 1);
+                        if (_channels[channelName])
+                            _channels[channelName]->ClientJoin(*senderClient);
+                        else
+                            _channels[channelName] = new Channel(*senderClient, channelName);
+                    }
+                }
+                //message
+                else {
+                    std::string message = "\n" + senderClient->_name + ": " + buffer + "\0";
+                    //le client est dans un channel
+                    if (senderClient->currentChannel)
+                        senderClient->currentChannel->broadcastMessage(message);
+                    //broadcastMessage(clientSocket, message);
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Channel.hpp"
 #include "Client.hpp"
 #include <iostream>
 #include <cstring>
@@ -11,6 +12,7 @@
 #include <sys/select.h>
 #include <algorithm>
 #include <vector>
+#include <map>
 
 const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
@@ -32,4 +34,5 @@ private:
     std::vector<Client> _clients;
     fd_set _masterSet;
     int _maxFd;
+    std::map<std::string, Channel*> _channels;
 };

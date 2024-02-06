@@ -1,6 +1,7 @@
 SRC = main.cpp
 FILES = Serveur.cpp \
-		Client.cpp
+		Client.cpp \
+		Channel.cpp
 
 OBJ = $(SRC:.cpp=.o) $(FILES:.cpp=.o)
 CXX = c++

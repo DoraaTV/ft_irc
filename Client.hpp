@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Channel.hpp"
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -11,9 +12,12 @@
 #include <algorithm>  // Pour std::find_if
 #include <vector>
 
+class Channel;
+
 class Client {
 public:
     Client(int _socket, const std::string& _name);
+    Channel *currentChannel;
 
 public:
     int _socket;

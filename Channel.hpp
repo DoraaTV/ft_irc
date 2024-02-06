@@ -10,27 +10,28 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHANNEL_HPP
-# define CHANNEL_HPP
-
-#include "Serveur.hpp"
+#pragma once
+#include <string>
+#include <vector>
 #include "Client.hpp"
+
+class Client;
 
 class Channel {
     private :
-        std::string         name;
-        std::vector<Client> clients;
-        std::vector<Client> operators;
+        std::vector<Client*> _clients;
+        std::vector<Client*> _operators;
         // Client (const*)Founder = clients[0];
-        
+        std::string         _name;
+
     public :
-        Channel (std::string name);
-        virtual ~Channel();
+        Channel (Client &founder, std::string name);
+        ~Channel();
 
-        void ClientJoin(Client client);
-        void ClientLeft(Client client);
-        void ClientKick(Client client);
+        void broadcastMessage(const std::string &message);
+        void ClientJoin(Client &client);
+        void ClientLeft(Client &client);
+        void ClientKick(Client &client);
         //Functions to add or remove operators
-}
+};
 
-#endif
