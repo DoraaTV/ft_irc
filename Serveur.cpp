@@ -128,6 +128,9 @@ void Server::handleExistingConnection(int clientSocket) {
             // Client trouvé, le supprimer
             // std::string leaveMessage = it->_name + " has left the chat.\n";
             // broadcastMessage(clientSocket, leaveMessage);
+
+            if (it->currentChannel)
+                it->currentChannel->ClientLeft(*it);
             _clients.erase(it);
         }
 
@@ -155,7 +158,7 @@ void Server::handleExistingConnection(int clientSocket) {
             // std::cout << std::endl;
             // std::string message = it->_name + " has joined the channel !";
             // broadcastMessage(clientSocket, message);
-            // showChannels(clientSocket);
+            showChannels(clientSocket);
         }
         //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
         else
@@ -166,13 +169,24 @@ void Server::handleExistingConnection(int clientSocket) {
                 //commande
                 if (buffer[0] == '/') {
                     //if channel already exists join it, if not create it
-                    if (!strncmp(buffer, "/JOIN ", 6)) {
+                    if (!strncmp(buffer, "/LIST", 5)) {
+                        showChannels(clientSocket);
+                    }
+                    else if (!strncmp(buffer, "/JOIN ", 6)) {
                         std::string channelName = buffer + 6;
                         channelName.erase(channelName.length() - 1);
                         if (_channels[channelName])
                             _channels[channelName]->ClientJoin(*senderClient);
                         else
                             _channels[channelName] = new Channel(*senderClient, channelName);
+                    }
+                    else if (!strncmp(buffer, "/LEAVE", 6)) {
+                        if (senderClient->currentChannel)
+                            senderClient->currentChannel->ClientLeft(*senderClient);
+                    }
+                    else {
+                        std::string message = "\nUnknown command\n\0";
+                        send(clientSocket, message.c_str(), message.length(), 0);
                     }
                 }
                 //message

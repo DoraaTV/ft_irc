@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/07 13:51:39 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/07 14:35:37 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ void Channel::ClientJoin(Client &client) {
 }
 
 void Channel::ClientLeft(Client &client) {
+    std::string notification = "\n\nYou left [" + _name + "] ! \n\n";
+    send((client)._socket, notification.c_str(), notification.length(), 0);
     client.currentChannel = NULL;
     _clients.erase(_clients.find(client._name));
     std::string message = "\n" + client._name + " has left the channel !\n";
