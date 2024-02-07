@@ -27,6 +27,7 @@ public:
     void handleNewConnection(int _serverSocket);
     void handleExistingConnection(int clientSocket);
     void broadcastMessage(int senderSocket, const std::string& message);
+    void showChannels(int clientSocket);
 
 private:
     int _serverSocket;

@@ -93,6 +93,20 @@ void Server::handleNewConnection(int _serverSocket) {
     _clients.push_back(Client(clientSocket, ""));
 }
 
+void Server::showChannels(int clientSocket) {
+    const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
+    send(clientSocket, serverList, std::strlen(serverList), 0);
+    if (_channels.empty()) {
+        const char* noChannel = "No channel available, create one using /JOIN <channel name>\n";
+        send(clientSocket, noChannel, std::strlen(noChannel), 0);
+    }
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        std::string channelName = it->first;
+        send(clientSocket, channelName.c_str(), channelName.length(), 0);
+        send(clientSocket, "\n", 1, 0);
+    }
+}
+
 void Server::handleExistingConnection(int clientSocket) {
     char buffer[BUFFER_SIZE] = {};
     ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
@@ -112,8 +126,8 @@ void Server::handleExistingConnection(int clientSocket) {
 
         if (it != _clients.end()) {
             // Client trouvé, le supprimer
-            std::string leaveMessage = it->_name + " has left the chat.\n";
-            broadcastMessage(clientSocket, leaveMessage);
+            // std::string leaveMessage = it->_name + " has left the chat.\n";
+            // broadcastMessage(clientSocket, leaveMessage);
             _clients.erase(it);
         }
 
@@ -138,9 +152,10 @@ void Server::handleExistingConnection(int clientSocket) {
                 }
             }
             it->_name = buffer;
-            std::cout << std::endl;
-            std::string message = it->_name + " has joined the channel !";
-            broadcastMessage(clientSocket, message);
+            // std::cout << std::endl;
+            // std::string message = it->_name + " has joined the channel !";
+            // broadcastMessage(clientSocket, message);
+            // showChannels(clientSocket);
         }
         //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
         else

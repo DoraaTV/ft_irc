@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/05 16:04:45 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/07 13:51:39 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,21 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
 void Channel::ClientJoin(Client &client) {
     if (client.currentChannel)
         client.currentChannel->ClientLeft(client);
+    std::string message = "\n" + client._name + " has joined the channel !\n";
+    broadcastMessage(message);
     _clients[client._name] = &client;
     client.currentChannel = this;
     std::string notification = "\n\nYou joined [" + _name + "] ! \n\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
+    
 }
 
 void Channel::ClientLeft(Client &client) {
+    client.currentChannel = NULL;
     _clients.erase(_clients.find(client._name));
+    std::string message = "\n" + client._name + " has left the channel !\n";
+    broadcastMessage(message);
+
 }
 
 void Channel::broadcastMessage(const std::string &message) {
