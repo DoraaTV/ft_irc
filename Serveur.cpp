@@ -194,7 +194,7 @@ void Server::handleExistingConnection(int clientSocket) {
                     std::string message = "\n" + senderClient->_name + ": " + buffer + "\0";
                     //le client est dans un channel
                     if (senderClient->currentChannel)
-                        senderClient->currentChannel->broadcastMessage(message);
+                        senderClient->currentChannel->sendMessage(message, *senderClient);
                     //broadcastMessage(clientSocket, message);
                 }
             }
