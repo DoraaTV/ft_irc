@@ -172,7 +172,13 @@ void Server::handleExistingConnection(int clientSocket) {
                     if (!strncmp(buffer, "/LIST", 5)) {
                         showChannels(clientSocket);
                     }
-                    else if (!strncmp(buffer, "/JOIN ", 6)) {
+                    else if (!strncmp(buffer, "/JOIN", 5)) {
+                        std::string channelname2 = buffer;
+                        if (channelname2.length() <= 7) {
+                            const char* message = "Please specify a channel name\n";
+                            send(clientSocket, message, std::strlen(message), 0);
+                            return;
+                        }
                         std::string channelName = buffer + 6;
                         channelName.erase(channelName.length() - 1);
                         if (_channels[channelName])
