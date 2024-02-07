@@ -12,15 +12,15 @@
 
 #pragma once
 #include <string>
-#include <vector>
+#include <map>
 #include "Client.hpp"
 
 class Client;
 
 class Channel {
     private :
-        std::vector<Client*> _clients;
-        std::vector<Client*> _operators;
+        std::map<std::string, Client*> _clients;
+        std::map<std::string, Client*> _operators;
         // Client (const*)Founder = clients[0];
         std::string         _name;
 

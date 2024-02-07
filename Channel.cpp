@@ -13,21 +13,27 @@
 #include "Channel.hpp"
 
 Channel::Channel(Client &founder, std::string name) : _name(name) {
-    _operators.push_back(&founder);
+    _operators[founder._name] = &founder;
     ClientJoin(founder);
 }
 
 void Channel::ClientJoin(Client &client) {
-    _clients.push_back(&client);
+    if (client.currentChannel)
+        client.currentChannel->ClientLeft(client);
+    _clients[client._name] = &client;
     client.currentChannel = this;
     std::string notification = "\n\nYou joined [" + _name + "] ! \n\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
 }
 
+void Channel::ClientLeft(Client &client) {
+    _clients.erase(_clients.find(client._name));
+}
+
 void Channel::broadcastMessage(const std::string &message) {
-    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+    for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         {
-            send((*it)->_socket, message.c_str(), message.length(), 0);
+            send((*it).second->_socket, message.c_str(), message.length(), 0);
         }
     }
 }
