@@ -110,7 +110,7 @@ void Server::showChannels(int clientSocket) {
 void Server::handleExistingConnection(int clientSocket) {
     char buffer[BUFFER_SIZE] = {};
     ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-    std::vector<Client>::iterator it = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+    std::deque<Client>::iterator it = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
     if (bytesReceived <= 0) {
         // Gérer la déconnexion ou l'erreur
         if (bytesReceived == 0) {
@@ -164,7 +164,7 @@ void Server::handleExistingConnection(int clientSocket) {
         else
         {
             //command COMMENCER PAR JOIN (create si existe pas)
-            std::vector<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+            std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
             if (senderClient != _clients.end()) {
                 //commande
                 if (buffer[0] == '/') {
@@ -204,7 +204,7 @@ void Server::handleExistingConnection(int clientSocket) {
 
 void Server::broadcastMessage(int senderSocket, const std::string& message) {
     std::cout << "DEBUG" << message << std::endl;
-    for (std::vector<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+    for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_socket != senderSocket) {
             send(it->_socket, message.c_str(), message.length(), 0);
         }

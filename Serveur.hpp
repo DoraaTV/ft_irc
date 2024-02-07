@@ -11,7 +11,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <algorithm>
-#include <vector>
+#include <deque>
 #include <map>
 
 const int BACKLOG = 10;
@@ -32,7 +32,7 @@ public:
 private:
     int _serverSocket;
     int _port;
-    std::vector<Client> _clients;
+    std::deque<Client> _clients;
     fd_set _masterSet;
     int _maxFd;
     std::map<std::string, Channel*> _channels;
