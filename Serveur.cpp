@@ -129,8 +129,14 @@ void Server::handleExistingConnection(int clientSocket) {
             // std::string leaveMessage = it->_name + " has left the chat.\n";
             // broadcastMessage(clientSocket, leaveMessage);
 
-            if (it->currentChannel)
+            Channel *currentChannel = it->currentChannel;
+            if (currentChannel) {
                 it->currentChannel->ClientLeft(*it);
+                if (currentChannel->_operators.empty()) {
+                    _channels.erase(currentChannel->_name);
+                    delete currentChannel;
+                }
+            }
             _clients.erase(it);
         }
 
@@ -181,8 +187,17 @@ void Server::handleExistingConnection(int clientSocket) {
                         }
                         std::string channelName = buffer + 6;
                         channelName.erase(channelName.length() - 1);
-                        if (_channels[channelName])
+                        Channel *currentChannel = senderClient->currentChannel;
+                        if (currentChannel) {
+                            senderClient->currentChannel->ClientLeft(*senderClient);
+                            if (currentChannel->_operators.empty()) {
+                                _channels.erase(currentChannel->_name);
+                                delete currentChannel;
+                            }
+                        }
+                        if (_channels[channelName]) {
                             _channels[channelName]->ClientJoin(*senderClient);
+                        }
                         else
                             _channels[channelName] = new Channel(*senderClient, channelName);
                     }

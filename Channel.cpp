@@ -17,26 +17,33 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
     ClientJoin(founder);
 }
 
+Channel::~Channel() {
+    for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+        it->second->currentChannel = NULL;
+    std::string message = "\nChannel " + _name + " has been destroyed !\n";
+    broadcastMessage(message);
+}
+
 void Channel::ClientJoin(Client &client) {
-    if (client.currentChannel)
-        client.currentChannel->ClientLeft(client);
+    //if (client.currentChannel)
+    //    client.currentChannel->ClientLeft(client);
     std::string message = "\n" + client._name + " has joined the channel !\n";
     broadcastMessage(message);
     _clients[client._name] = &client;
     client.currentChannel = this;
     std::string notification = "You joined [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
-    
+
 }
 
 void Channel::ClientLeft(Client &client) {
     std::string notification = "You left [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
     client.currentChannel = NULL;
-    // _clients.erase(_clients.find(client._name));
+    _clients.erase(client._name);
     std::string message = "\n" + client._name + " has left the channel !\n";
     broadcastMessage(message);
-
+    _operators.erase(client._name);
 }
 
 void Channel::sendMessage(const std::string &message, Client &sender) {

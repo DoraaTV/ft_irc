@@ -18,7 +18,7 @@
 class Client;
 
 class Channel {
-    private :
+    public :
         std::map<std::string, Client*> _clients;
         std::map<std::string, Client*> _operators;
         // Client (const*)Founder = clients[0];
