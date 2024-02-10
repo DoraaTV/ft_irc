@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <deque>
 #include <map>
+#include <netdb.h>
+#include <sstream>
 
 const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
