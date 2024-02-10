@@ -24,7 +24,6 @@ class Channel {
         std::map<std::string, Client*> _invited;
         bool                _isInviteOnly;
         unsigned int        _limit;
-        unsigned int        _nbClients;
         // Client (const*)Founder = clients[0];
         std::string         _name;
 
@@ -32,13 +31,14 @@ class Channel {
         Channel (Client &founder, std::string name);
         ~Channel();
 
+        bool isOperator(const std::string &clientName);
         void broadcastMessage(const std::string &message);
         int  isInviteOnly();
         void setLimit(unsigned int limit);
         void setInviteOnly(bool inviteOnly);
         void ClientJoin(Client &client);
         void ClientLeft(Client &client);
-        void ClientKick(Client &client);
+        void ClientKick(std::string &clientToKick);
         void sendMessage(const std::string &message, Client &sender);
         //Functions to add or remove operators
 };

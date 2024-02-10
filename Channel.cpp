@@ -13,6 +13,8 @@
 #include "Channel.hpp"
 
 Channel::Channel(Client &founder, std::string name) : _name(name) {
+    _limit = 10;
+    _isInviteOnly = false;
     _operators[founder._name] = &founder;
     ClientJoin(founder);
 }
@@ -24,10 +26,27 @@ Channel::~Channel() {
     broadcastMessage(message);
 }
 
+bool Channel::isOperator(const std::string &clientName) {
+    return _operators.count(clientName);
+}
+
+void Channel::ClientKick(std::string &clientToKick) {
+    if (_clients.count(clientToKick)) {
+        Client &client = *(_clients[clientToKick]);
+        std::string notification = "You have been kicked from [" + _name + "] !\n";
+        send((client)._socket, notification.c_str(), notification.length(), 0);
+        client.currentChannel = NULL;
+        _clients.erase(client._name);
+        std::string message = "\n" + client._name + " has been kicked from the channel !\n";
+        broadcastMessage(message);
+        _operators.erase(client._name);
+    }
+}
+
 void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
-    if (_limit && _nbClients >= _limit) {
+    if (_limit && _clients.size() >= _limit) {
         std::string notification = "Channel [" + _name + "] is full !\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         return;
@@ -42,7 +61,6 @@ void Channel::ClientJoin(Client &client) {
     _clients[client._name] = &client;
     client.currentChannel = this;
     std::string notification = "You joined [" + _name + "] !\n";
-    _nbClients++;
     send((client)._socket, notification.c_str(), notification.length(), 0);
 
 }
@@ -54,7 +72,6 @@ void Channel::ClientLeft(Client &client) {
     _clients.erase(client._name);
     std::string message = "\n" + client._name + " has left the channel !\n";
     broadcastMessage(message);
-    _nbClients--;
     _operators.erase(client._name);
 }
 
@@ -73,15 +90,6 @@ void Channel::setInviteOnly(bool inviteOnly) {
     _isInviteOnly = inviteOnly;
 }
 
-void Channel::ClientKick(Client &client) {
-    std::string message = "\n" + client._name + " has been kicked from the channel !\n";
-    sendMessage(message, client);
-    _clients.erase(client._name);
-    _operators.erase(client._name);
-    client.currentChannel = NULL;
-    std::string notification = "You have been kicked from [" + _name + "] !\n";
-    send((client)._socket, notification.c_str(), notification.length(), 0);
-}
 
 void Channel::setLimit(unsigned int limit) {
     _limit = limit;

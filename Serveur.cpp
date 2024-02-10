@@ -88,7 +88,7 @@ void Server::bindSocket() {
         close(_serverSocket);
         exit(1);
     }
-    std::cout << "Local ip address: " << inet_ntoa(serverAddress.sin_addr) << std::endl; 
+    std::cout << "Local ip address: " << inet_ntoa(serverAddress.sin_addr) << std::endl;
     std::cout << "Port: " << ntohs(serverAddress.sin_port) << std::endl;
 
     // Récupération hostname
@@ -277,7 +277,7 @@ void Server::handleExistingConnection(int clientSocket) {
                         }
 
                     }
-                        
+
                     else if (!strncmp(buffer, "/JOIN", 5)) {
                         std::string channelname2 = buffer;
                         if (channelname2.length() <= 7) {
@@ -304,6 +304,23 @@ void Server::handleExistingConnection(int clientSocket) {
                     else if (!strncmp(buffer, "/LEAVE", 6)) {
                         if (senderClient->currentChannel)
                             senderClient->currentChannel->ClientLeft(*senderClient);
+                    }
+                    else if (!strncmp(buffer, "/KICK ", 6)) {
+                        if (senderClient->currentChannel->isOperator(senderClient->_name)) {
+                            std::string clientToKick = buffer + 6;
+                            clientToKick.erase(clientToKick.length() - 1);
+                            if (clientToKick.compare(senderClient->_name))
+                                senderClient->currentChannel->ClientKick(clientToKick);
+                            else {
+                                std::string message = "\nError: You can't kick yourself";
+                                send(clientSocket, message.c_str(), message.length(), 0);
+                            }
+
+                        }
+                        else {
+                            std::string message = "\nError: You don't have the required rights to execute this command\n";
+                            send(clientSocket, message.c_str(), message.length(), 0);
+                        }
                     }
                     else {
                         std::string message = "\nUnknown command\n\0";
