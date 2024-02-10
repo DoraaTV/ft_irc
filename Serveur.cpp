@@ -202,6 +202,13 @@ void Server::handleExistingConnection(int clientSocket) {
                         else if (!strncmp(mode, "-i", 2)) {
                             senderClient->currentChannel->setInviteOnly(false);
                         }
+                        else if (!strncmp(mode, "+l", 2)) {
+                            int limit = std::atoi(mode + 3);
+                            senderClient->currentChannel->setLimit(limit);
+                        }
+                        else if (!strncmp(mode, "-l", 2)) {
+                            senderClient->currentChannel->setLimit(0);
+                        }
                         else {
                             const char* message = "Unknown mode\n";
                             send(clientSocket, message, std::strlen(message), 0);

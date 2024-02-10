@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/10 13:15:37 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/10 13:27:42 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ class Channel {
         std::map<std::string, Client*> _operators;
         std::map<std::string, Client*> _invited;
         bool                _isInviteOnly;
+        unsigned int        _limit;
+        unsigned int        _nbClients;
         // Client (const*)Founder = clients[0];
         std::string         _name;
 
@@ -32,6 +34,7 @@ class Channel {
 
         void broadcastMessage(const std::string &message);
         int  isInviteOnly();
+        void setLimit(unsigned int limit);
         void setInviteOnly(bool inviteOnly);
         void ClientJoin(Client &client);
         void ClientLeft(Client &client);

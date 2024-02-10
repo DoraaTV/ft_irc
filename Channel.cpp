@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/10 13:15:52 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/10 13:28:47 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,11 @@ Channel::~Channel() {
 void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
+    if (_limit && _nbClients >= _limit) {
+        std::string notification = "Channel [" + _name + "] is full !\n";
+        send((client)._socket, notification.c_str(), notification.length(), 0);
+        return;
+    }
     if (_isInviteOnly && _invited.find(client._name) == _invited.end()) {
         std::string notification = "You are not invited to join [" + _name + "] !\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
@@ -37,6 +42,7 @@ void Channel::ClientJoin(Client &client) {
     _clients[client._name] = &client;
     client.currentChannel = this;
     std::string notification = "You joined [" + _name + "] !\n";
+    _nbClients++;
     send((client)._socket, notification.c_str(), notification.length(), 0);
 
 }
@@ -48,6 +54,7 @@ void Channel::ClientLeft(Client &client) {
     _clients.erase(client._name);
     std::string message = "\n" + client._name + " has left the channel !\n";
     broadcastMessage(message);
+    _nbClients--;
     _operators.erase(client._name);
 }
 
@@ -74,6 +81,10 @@ void Channel::ClientKick(Client &client) {
     client.currentChannel = NULL;
     std::string notification = "You have been kicked from [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
+}
+
+void Channel::setLimit(unsigned int limit) {
+    _limit = limit;
 }
 
 
