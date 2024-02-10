@@ -178,6 +178,37 @@ void Server::handleExistingConnection(int clientSocket) {
                     if (!strncmp(buffer, "/LIST", 5)) {
                         showChannels(clientSocket);
                     }
+                    else if (!strncmp(buffer, "/MODE", 5)) {
+                        char *mode = buffer + 6;
+                        std::string mode2 = buffer + 6;
+                        if (mode2.length() <= 2){
+                            const char* message = "Please specify a mode\n";
+                            send(clientSocket, message, std::strlen(message), 0);
+                            return;
+                        }
+                        if (!senderClient->currentChannel) {
+                            const char* message = "You are not in a channel\n";
+                            send(clientSocket, message, std::strlen(message), 0);
+                            return;
+                        }
+                        else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
+                            const char* message = "You are not an operator\n";
+                            send(clientSocket, message, std::strlen(message), 0);
+                            return;
+                        }
+                        if (!strncmp(mode, "+i", 2)) {
+                            senderClient->currentChannel->setInviteOnly(true);
+                        }
+                        else if (!strncmp(mode, "-i", 2)) {
+                            senderClient->currentChannel->setInviteOnly(false);
+                        }
+                        else {
+                            const char* message = "Unknown mode\n";
+                            send(clientSocket, message, std::strlen(message), 0);
+                        }
+
+                    }
+                        
                     else if (!strncmp(buffer, "/JOIN", 5)) {
                         std::string channelname2 = buffer;
                         if (channelname2.length() <= 7) {

@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/07 16:55:34 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/10 13:15:52 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,11 @@ Channel::~Channel() {
 void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
+    if (_isInviteOnly && _invited.find(client._name) == _invited.end()) {
+        std::string notification = "You are not invited to join [" + _name + "] !\n";
+        send((client)._socket, notification.c_str(), notification.length(), 0);
+        return;
+    }
     std::string message = "\n" + client._name + " has joined the channel !\n";
     broadcastMessage(message);
     _clients[client._name] = &client;
@@ -51,6 +56,24 @@ void Channel::sendMessage(const std::string &message, Client &sender) {
         if ((*it).second != &sender)
             send((*it).second->_socket, message.c_str(), message.length(), 0);
     }
+}
+
+int Channel::isInviteOnly() {
+    return _isInviteOnly;
+}
+
+void Channel::setInviteOnly(bool inviteOnly) {
+    _isInviteOnly = inviteOnly;
+}
+
+void Channel::ClientKick(Client &client) {
+    std::string message = "\n" + client._name + " has been kicked from the channel !\n";
+    sendMessage(message, client);
+    _clients.erase(client._name);
+    _operators.erase(client._name);
+    client.currentChannel = NULL;
+    std::string notification = "You have been kicked from [" + _name + "] !\n";
+    send((client)._socket, notification.c_str(), notification.length(), 0);
 }
 
 
