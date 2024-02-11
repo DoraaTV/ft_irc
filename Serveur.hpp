@@ -30,6 +30,7 @@ public:
     void handleExistingConnection(int clientSocket);
     void broadcastMessage(int senderSocket, const std::string& message);
     void showChannels(int clientSocket);
+    void handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
 
 private:
     int _serverSocket;

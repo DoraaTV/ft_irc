@@ -2,11 +2,11 @@
 #include "Channel.hpp"
 
 struct ClientFinder {
-        int socketToFind;
-        ClientFinder(int socketToFind) : socketToFind(socketToFind) {}
-        bool operator()(const Client& _client) const {
-            return _client._socket == socketToFind;
-        }
+    int socketToFind;
+    ClientFinder(int socketToFind) : socketToFind(socketToFind) {}
+    bool operator()(const Client& _client) const {
+        return _client._socket == socketToFind;
+    }
 };
 
 Server::Server(int _port) : _port(_port), _maxFd(0) {
@@ -236,96 +236,7 @@ void Server::handleExistingConnection(int clientSocket) {
             if (senderClient != _clients.end()) {
                 //commande
                 if (buffer[0] == '/') {
-                    //if channel already exists join it, if not create it
-                    if (!strncmp(buffer, "/LIST", 5)) {
-                        showChannels(clientSocket);
-                    }
-                    else if (!strncmp(buffer, "/MODE", 5)) {
-                        char *mode = buffer + 6;
-                        std::string mode2 = buffer + 6;
-                        if (mode2.length() <= 2){
-                            const char* message = "Please specify a mode\n";
-                            send(clientSocket, message, std::strlen(message), 0);
-                            return;
-                        }
-                        if (!senderClient->currentChannel) {
-                            const char* message = "You are not in a channel\n";
-                            send(clientSocket, message, std::strlen(message), 0);
-                            return;
-                        }
-                        else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
-                            const char* message = "You are not an operator\n";
-                            send(clientSocket, message, std::strlen(message), 0);
-                            return;
-                        }
-                        if (!strncmp(mode, "+i", 2)) {
-                            senderClient->currentChannel->setInviteOnly(true);
-                        }
-                        else if (!strncmp(mode, "-i", 2)) {
-                            senderClient->currentChannel->setInviteOnly(false);
-                        }
-                        else if (!strncmp(mode, "+l", 2)) {
-                            int limit = std::atoi(mode + 3);
-                            senderClient->currentChannel->setLimit(limit);
-                        }
-                        else if (!strncmp(mode, "-l", 2)) {
-                            senderClient->currentChannel->setLimit(0);
-                        }
-                        else {
-                            const char* message = "Unknown mode\n";
-                            send(clientSocket, message, std::strlen(message), 0);
-                        }
-
-                    }
-
-                    else if (!strncmp(buffer, "/JOIN", 5)) {
-                        std::string channelname2 = buffer;
-                        if (channelname2.length() <= 7) {
-                            const char* message = "Please specify a channel name\n";
-                            send(clientSocket, message, std::strlen(message), 0);
-                            return;
-                        }
-                        std::string channelName = buffer + 6;
-                        channelName.erase(channelName.length() - 1);
-                        Channel *currentChannel = senderClient->currentChannel;
-                        if (currentChannel) {
-                            senderClient->currentChannel->ClientLeft(*senderClient);
-                            if (currentChannel->_operators.empty()) {
-                                _channels.erase(currentChannel->_name);
-                                delete currentChannel;
-                            }
-                        }
-                        if (_channels[channelName]) {
-                            _channels[channelName]->ClientJoin(*senderClient);
-                        }
-                        else
-                            _channels[channelName] = new Channel(*senderClient, channelName);
-                    }
-                    else if (!strncmp(buffer, "/LEAVE", 6)) {
-                        if (senderClient->currentChannel)
-                            senderClient->currentChannel->ClientLeft(*senderClient);
-                    }
-                    else if (!strncmp(buffer, "/KICK ", 6)) {
-                        if (senderClient->currentChannel->isOperator(senderClient->_name)) {
-                            std::string clientToKick = buffer + 6;
-                            clientToKick.erase(clientToKick.length() - 1);
-                            if (clientToKick.compare(senderClient->_name))
-                                senderClient->currentChannel->ClientKick(clientToKick);
-                            else {
-                                std::string message = "\nError: You can't kick yourself";
-                                send(clientSocket, message.c_str(), message.length(), 0);
-                            }
-
-                        }
-                        else {
-                            std::string message = "\nError: You don't have the required rights to execute this command\n";
-                            send(clientSocket, message.c_str(), message.length(), 0);
-                        }
-                    }
-                    else {
-                        std::string message = "\nUnknown command\n\0";
-                        send(clientSocket, message.c_str(), message.length(), 0);
-                    }
+                    handleCommand(buffer, clientSocket, senderClient);
                 }
                 //message
                 else {
@@ -337,6 +248,98 @@ void Server::handleExistingConnection(int clientSocket) {
                 }
             }
         }
+    }
+}
+
+void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    if (!strncmp(buffer, "/LIST", 5)) {
+        showChannels(clientSocket);
+    }
+    else if (!strncmp(buffer, "/MODE", 5)) {
+        char *mode = buffer + 6;
+        std::string mode2 = buffer + 6;
+        if (mode2.length() <= 2){
+            const char* message = "Please specify a mode\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        if (!senderClient->currentChannel) {
+            const char* message = "You are not in a channel\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
+            const char* message = "You are not an operator\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        if (!strncmp(mode, "+i", 2)) {
+            senderClient->currentChannel->setInviteOnly(true);
+        }
+        else if (!strncmp(mode, "-i", 2)) {
+            senderClient->currentChannel->setInviteOnly(false);
+        }
+        else if (!strncmp(mode, "+l", 2)) {
+            int limit = std::atoi(mode + 3);
+            senderClient->currentChannel->setLimit(limit);
+        }
+        else if (!strncmp(mode, "-l", 2)) {
+            senderClient->currentChannel->setLimit(0);
+        }
+        else {
+            const char* message = "Unknown mode\n";
+            send(clientSocket, message, std::strlen(message), 0);
+        }
+
+    }
+
+    else if (!strncmp(buffer, "/JOIN", 5)) {
+        std::string channelname2 = buffer;
+        if (channelname2.length() <= 7) {
+            const char* message = "Please specify a channel name\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        std::string channelName = buffer + 6;
+        channelName.erase(channelName.length() - 1);
+        Channel *currentChannel = senderClient->currentChannel;
+        if (currentChannel) {
+            senderClient->currentChannel->ClientLeft(*senderClient);
+            if (currentChannel->_operators.empty()) {
+                _channels.erase(currentChannel->_name);
+                delete currentChannel;
+            }
+        }
+        if (_channels[channelName]) {
+            _channels[channelName]->ClientJoin(*senderClient);
+        }
+        else
+            _channels[channelName] = new Channel(*senderClient, channelName);
+    }
+    else if (!strncmp(buffer, "/LEAVE", 6)) {
+        if (senderClient->currentChannel)
+            senderClient->currentChannel->ClientLeft(*senderClient);
+    }
+    else if (!strncmp(buffer, "/KICK ", 6)) {
+        if (senderClient->currentChannel->isOperator(senderClient->_name)) {
+            std::string clientToKick = buffer + 6;
+            clientToKick.erase(clientToKick.length() - 1);
+            if (clientToKick.compare(senderClient->_name))
+                senderClient->currentChannel->ClientKick(clientToKick);
+            else {
+                std::string message = "\nError: You can't kick yourself\n";
+                send(clientSocket, message.c_str(), message.length(), 0);
+            }
+
+        }
+        else {
+            std::string message = "\nError: You don't have the required rights to execute this command\n";
+            send(clientSocket, message.c_str(), message.length(), 0);
+        }
+    }
+    else {
+        std::string message = "\nUnknown command\n\0";
+        send(clientSocket, message.c_str(), message.length(), 0);
     }
 }
 
