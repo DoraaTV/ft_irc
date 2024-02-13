@@ -1,5 +1,6 @@
 #include "Serveur.hpp"
 #include "Channel.hpp"
+#include <string>
 
 struct ClientFinder {
     int socketToFind;
@@ -254,6 +255,25 @@ void Server::handleExistingConnection(int clientSocket) {
 void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     if (!strncmp(buffer, "/LIST", 5)) {
         showChannels(clientSocket);
+    }
+    else if (!strncmp(buffer, "/PRIVMSG", 8)) {
+        std::string command = buffer + 8;
+        size_t space_pos = command.find(" ");
+        if (space_pos != std::string::npos) {
+            command = command.substr(space_pos + 1);
+            space_pos = command.find(" ");
+            if (space_pos != std::string::npos) {
+                std::string receiverName = command.substr(0, space_pos);
+                std::string textToSend = command.substr(space_pos + 1);
+                for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+                    if (it->_name == receiverName) {
+                        std::string message = "Private Message from " + senderClient->_name + ": " + textToSend;
+                        send(it->_socket, message.c_str(), message.length(), 0);
+                        break;
+                    }
+                }
+            }
+        }
     }
     else if (!strncmp(buffer, "/MODE", 5)) {
         char *mode = buffer + 6;
