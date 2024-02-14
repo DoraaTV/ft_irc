@@ -19,6 +19,13 @@
 const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
 
+class Server;
+
+struct Command {
+    std::string name;
+    void (Server::*function)(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+};
+
 class Server {
 public:
     Server(int _port);
@@ -29,12 +36,18 @@ public:
     void handleNewConnection(int _serverSocket);
     void handleExistingConnection(int clientSocket);
     void broadcastMessage(int senderSocket, const std::string& message);
-    void showChannels(int clientSocket);
+    void showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
 
 private:
     int _serverSocket;
     int _port;
+    Command _commands[7];
     std::deque<Client> _clients;
     fd_set _masterSet;
     int _maxFd;
