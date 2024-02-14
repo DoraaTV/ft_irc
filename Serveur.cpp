@@ -259,14 +259,12 @@ void Server::bindSocket() {
 
 }
 
-
 void Server::listenForConnections() {
     if (listen(_serverSocket, BACKLOG) == -1) {
         std::cerr << "Error listening on socket" << std::endl;
         exit(1);
     }
 }
-
 
 // Client se connecte
 void Server::handleNewConnection(int _serverSocket) {
@@ -374,9 +372,7 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 5; i++) {
-        std::cout << _commands[i].name << std::endl;
-        std::cout << strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length()) << std::endl;
+    for (int i = 0; i < 6; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return;
@@ -388,7 +384,6 @@ void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::i
 }
 
 void Server::broadcastMessage(int senderSocket, const std::string& message) {
-    std::cout << "DEBUG" << message << std::endl;
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_socket != senderSocket) {
             send(it->_socket, message.c_str(), message.length(), 0);
