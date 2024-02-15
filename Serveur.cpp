@@ -101,6 +101,47 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     else if (!strncmp(mode, "-l", 2)) {
         senderClient->currentChannel->setLimit(0);
     }
+    else if (!strncmp(mode, "+o", 2)) {
+        if (std::strlen(mode) <= 3) {
+            const char* message = "Please specify a client to op\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        std::string clientToOp = mode + 3;
+        senderClient->currentChannel->addOperator(clientToOp);
+    }
+    else if (!strncmp(mode, "-o", 2)) {
+        if (std::strlen(mode) <= 3) {
+            const char* message = "Please specify a client to deop\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        std::string clientToDeop = mode + 3;
+        senderClient->currentChannel->removeOperator(clientToDeop);
+    }
+    else if (!strncmp(mode, "+k", 2)) {
+        if (std::strlen(mode) <= 3) {
+            const char* message = "Please specify a password\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        std::string password = mode + 3;
+        password = password.substr(0, password.size() - 1);
+        if (senderClient->currentChannel->_isPasswordProtected) {
+            const char* message = "Channel is already password protected\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        senderClient->currentChannel->setPasswd(password);
+    }
+    else if (!strncmp(mode, "-k", 2)) {
+        if (!senderClient->currentChannel->_isPasswordProtected) {
+            const char* message = "Channel is not password protected\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        senderClient->currentChannel->removePasswd();
+    }
     else {
         const char* message = "Unknown mode\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -108,15 +149,31 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
 }
 
 void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    std::string channelname2 = buffer;
-    if (channelname2.length() <= 7) {
+
+    std::string channelname2 = buffer + 6;
+    size_t space_pos = channelname2.find(" ");
+    std::string password;
+    if (space_pos != std::string::npos) {
+        password = channelname2.substr(space_pos + 1);
+        channelname2 = channelname2.substr(0, space_pos);
+    }
+    std::cout << buffer << channelname2 << std::endl;
+    
+    if (channelname2.length() <= 0) {
         const char* message = "Please specify a channel name\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
-    std::string channelName = buffer + 6;
-    channelName.erase(channelName.length() - 1);
+    std::string channelName = channelname2;
+    // channelName.erase(channelName.length() - 1);
     Channel *currentChannel = senderClient->currentChannel;
+    if (currentChannel && !currentChannel->_isPasswordProtected)
+        channelName.erase(channelName.length() - 1);
+    else if (currentChannel && currentChannel->_name == channelName) {
+        const char* message = "You are already in this channel\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
     if (currentChannel) {
         senderClient->currentChannel->ClientLeft(*senderClient);
         if (currentChannel->_operators.empty()) {
@@ -124,7 +181,19 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
             delete currentChannel;
         }
     }
+    std::cout << "channelName: " << channelName << std::endl;
     if (_channels[channelName]) {
+        if (_channels[channelName]->_isPasswordProtected && password.empty()) {
+            const char* message = "Please specify a password\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
+            const char* message = "Wrong password\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        std::cout << "clients socket: " << senderClient->_socket << std::endl;
         _channels[channelName]->ClientJoin(*senderClient);
     }
     else

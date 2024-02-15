@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/10 13:28:47 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/15 17:04:48 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 Channel::Channel(Client &founder, std::string name) : _name(name) {
     _limit = 10;
     _isInviteOnly = false;
+    _isPasswordProtected = false;
     _operators[founder._name] = &founder;
     ClientJoin(founder);
 }
@@ -43,6 +44,16 @@ void Channel::ClientKick(std::string &clientToKick) {
     }
 }
 
+void Channel::setPasswd(std::string &passwd) {
+    _isPasswordProtected = true;
+    _password = passwd;
+}
+
+void Channel::removePasswd() {
+    _isPasswordProtected = false;
+    _password = "";
+}
+
 void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
@@ -65,6 +76,26 @@ void Channel::ClientJoin(Client &client) {
 
 }
 
+void Channel::addOperator(std::string &clientName) {
+    //remove last char from clientName that is \n
+    clientName = clientName.substr(0, clientName.size() - 1);
+    std::cout << "Trying to add operator : " << clientName << " to channel " << _name << std::endl;
+    std::cout << "Client : " << _clients[clientName]->currentChannel << std::endl;
+    if (_clients[clientName]) {
+        std::cout << "Adding operator : " << clientName << " to channel " << _name << std::endl;
+        _operators[clientName] = _clients[clientName];
+    }
+
+    //show all op for debug
+    for (std::map<std::string, Client*>::iterator it = _operators.begin(); it != _operators.end(); ++it) {
+        std::cout << "Operator : " << (*it).second->_name << std::endl;
+    }
+}
+
+void Channel::removeOperator(std::string &clientName) {
+        _operators.erase(clientName);
+}
+
 void Channel::ClientLeft(Client &client) {
     std::string notification = "You left [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
@@ -77,6 +108,7 @@ void Channel::ClientLeft(Client &client) {
 
 void Channel::sendMessage(const std::string &message, Client &sender) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
         if ((*it).second != &sender)
             send((*it).second->_socket, message.c_str(), message.length(), 0);
     }
@@ -98,6 +130,7 @@ void Channel::setLimit(unsigned int limit) {
 
 void Channel::broadcastMessage(const std::string &message) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
             send((*it).second->_socket, message.c_str(), message.length(), 0);
     }
 }

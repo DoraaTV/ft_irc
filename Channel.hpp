@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/10 13:27:42 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/15 17:04:43 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,11 @@ class Channel {
         std::map<std::string, Client*> _operators;
         std::map<std::string, Client*> _invited;
         bool                _isInviteOnly;
+        bool                _isPasswordProtected;
         unsigned int        _limit;
         // Client (const*)Founder = clients[0];
         std::string         _name;
+        std::string         _password;
 
     public :
         Channel (Client &founder, std::string name);
@@ -34,12 +36,17 @@ class Channel {
         bool isOperator(const std::string &clientName);
         void broadcastMessage(const std::string &message);
         int  isInviteOnly();
+        void addOperator(std::string &clientName);
+        void removeOperator(std::string &clientName);
         void setLimit(unsigned int limit);
         void setInviteOnly(bool inviteOnly);
         void ClientJoin(Client &client);
         void ClientLeft(Client &client);
         void ClientKick(std::string &clientToKick);
         void sendMessage(const std::string &message, Client &sender);
+
+        void setPasswd(std::string &passwd);
+        void removePasswd();
         //Functions to add or remove operators
 };
 
