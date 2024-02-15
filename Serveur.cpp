@@ -120,7 +120,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         senderClient->currentChannel->removeOperator(clientToDeop);
     }
     else if (!strncmp(mode, "+k", 2)) {
-        if (std::strlen(mode) <= 3) {
+        if (std::strlen(mode) <= 4) {
             const char* message = "Please specify a password\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
@@ -186,12 +186,12 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
     }
     std::cout << "channelName: " << channelName << "test" << std::endl;
     if (_channels[channelName]) {
-        password.erase(password.length() - 1);
         if (_channels[channelName]->_isPasswordProtected && password.empty()) {
             const char* message = "Please specify a password\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
+        password.erase(password.length() - 1);
         if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
             const char* message = "Wrong password\n";
             send(clientSocket, message, std::strlen(message), 0);
@@ -228,10 +228,13 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
 void Server::start() {
     std::cout << "Server listening on port " << _port << "..." << std::endl;
 
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 1;
     while (true) {
         fd_set readSet = _masterSet;
 
-        int result = select(_maxFd + 1, &readSet, NULL, NULL, NULL);
+        int result = select(_maxFd + 1, &readSet, NULL, NULL, &timeout);
         if (result == -1) {
             std::cerr << "Error in select" << std::endl;
             exit(1);
@@ -269,6 +272,7 @@ int Server::createSocket() {
 void Server::bindSocket() {
     //creation du serveur avec le _port
     sockaddr_in serverAddress;
+    //memset(&serverAddress, 0, sizeof(serverAddress)) aurait été bien mais on a pas le droit
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(_port);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
@@ -301,8 +305,8 @@ void Server::bindSocket() {
     std::cout << "Port: " << ntohs(serverAddress.sin_port) << std::endl;
 
     // Récupération hostname
-    struct hostent *host;
-    const char *hostname = "www.example.com"; // Nom de l'hôte à résoudre
+    struct hostent *host;   
+    const char *hostname = "www.syakovle-42.fr"; // Nom de l'hôte à résoudre
 
     // Résolution du nom d'hôte
     host = gethostbyname(hostname);
