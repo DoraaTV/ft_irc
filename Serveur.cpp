@@ -164,12 +164,15 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
+    size_t pos = channelname2.find("\n");
+    if (pos != std::string::npos)
+        channelname2.erase(pos);
     std::string channelName = channelname2;
     // channelName.erase(channelName.length() - 1);
     Channel *currentChannel = senderClient->currentChannel;
-    if (currentChannel && !currentChannel->_isPasswordProtected)
-        channelName.erase(channelName.length() - 1);
-    else if (currentChannel && currentChannel->_name == channelName) {
+    // if (currentChannel && !currentChannel->_isPasswordProtected)
+    //     channelName.erase(channelName.length() - 1);
+    if (currentChannel && currentChannel->_name == channelName) {
         const char* message = "You are already in this channel\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
@@ -181,8 +184,9 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
             delete currentChannel;
         }
     }
-    std::cout << "channelName: " << channelName << std::endl;
+    std::cout << "channelName: " << channelName << "test" << std::endl;
     if (_channels[channelName]) {
+        password.erase(password.length() - 1);
         if (_channels[channelName]->_isPasswordProtected && password.empty()) {
             const char* message = "Please specify a password\n";
             send(clientSocket, message, std::strlen(message), 0);
