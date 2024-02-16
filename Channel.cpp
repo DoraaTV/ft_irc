@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/16 16:17:31 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/16 21:42:54 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,8 +43,7 @@ void Channel::setTopic(std::string &topic) {
 }
 
 std::string Channel::getTopic() {
-    std::string message = "The topic of " + _name + " is : " + _topic + "\n";
-    return message;
+    return _topic;
 }
 
 void Channel::ClientKick(std::string &clientToKick) {

@@ -133,17 +133,29 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
 void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     (void)buffer;
     (void)senderClient;
-    const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
-    send(clientSocket, serverList, std::strlen(serverList), 0);
-    if (_channels.empty()) {
-        const char* noChannel = "No channel available, create one using /JOIN <channel name>\n";
-        send(clientSocket, noChannel, std::strlen(noChannel), 0);
-    }
+    std::string serverList = senderClient->_name + " Channel : Users Name\n";
+    // const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
+    send(clientSocket, GREEN, std::strlen(GREEN), 0);
+    send(clientSocket, serverList.c_str(), serverList.length(), 0);
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
         std::string channelName = it->first;
+        send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
+        send(clientSocket, " ", 1, 0);
         send(clientSocket, channelName.c_str(), channelName.length(), 0);
+        send(clientSocket, " : ", 2, 0);
+        // show users in channel and their topic
+        std::ostringstream oss;
+        oss << it->second->_clients.size();
+        std::string sizeStr = oss.str();
+        // std::string sizeStr = std::to_string(it->second->_clients.size());
+        send(clientSocket, sizeStr.c_str(), sizeStr.length(), 0);
+        send(clientSocket, " ", 1, 0);
+        send(clientSocket, it->second->getTopic().c_str(), it->second->getTopic().length(), 0);
         send(clientSocket, "\n", 1, 0);
     }
+    send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
+    send(clientSocket, ": End of /LIST\n\0", 16, 0);
+    send(clientSocket, RESET, std::strlen(RESET), 0);
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
