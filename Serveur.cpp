@@ -252,13 +252,14 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
             delete currentChannel;
         }
     }
-    std::cout << "channelName: " << channelName << "test" << std::endl;
     if (_channels[channelName]) {
         if (_channels[channelName]->_isPasswordProtected && password.empty()) {
             const char* message = "Please specify a password\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
+        if (password.empty())
+            password = " ";
         password.erase(password.length() - 1);
         if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
             const char* message = "Wrong password\n";
@@ -505,7 +506,7 @@ void Server::handleExistingConnection(int clientSocket) {
                 }
                 //message
                 else {
-                    std::string message = "\n" + senderClient->_name + ": " + buffer + "\0";
+                    std::string message = "\033[36m\n" + senderClient->_name + ": " + buffer + "\033[0m\0";
                     //le client est dans un channel
                     if (senderClient->currentChannel)
                         senderClient->currentChannel->sendMessage(message, *senderClient);
