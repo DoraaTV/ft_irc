@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/15 17:04:48 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/16 15:48:58 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
     _isInviteOnly = false;
     _isPasswordProtected = false;
     _operators[founder._name] = &founder;
+    _topic = "No topic";
     ClientJoin(founder);
 }
 
@@ -29,6 +30,16 @@ Channel::~Channel() {
 
 bool Channel::isOperator(const std::string &clientName) {
     return _operators.count(clientName);
+}
+
+void Channel::setTopic(std::string &topic) {
+    topic = topic.substr(0, topic.size() - 1);
+    _topic = topic;
+}
+
+std::string Channel::getTopic() {
+    std::string message = "\033[32mThe topic of " + _name + " is : " + _topic + "\n\033[0m";
+    return message;
 }
 
 void Channel::ClientKick(std::string &clientToKick) {

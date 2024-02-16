@@ -16,6 +16,16 @@
 #include <netdb.h>
 #include <sstream>
 
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define WHITE   "\033[37m"
+
 const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
 
@@ -43,11 +53,14 @@ public:
     void leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+
 
 private:
     int _serverSocket;
     int _port;
-    Command _commands[7];
+    Command _commands[9];
     std::deque<Client> _clients;
     fd_set _masterSet;
     int _maxFd;

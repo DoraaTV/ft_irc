@@ -27,6 +27,74 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[4].function = &Server::kickUser;
     _commands[5].name = "/MODE";
     _commands[5].function = &Server::setMode;
+    _commands[6].name = "/NICK";
+    _commands[6].function = &Server::changeNick;
+    _commands[7].name = "/TOPIC";
+    _commands[7].function = &Server::changeTopic;
+}
+
+void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    if (std::strlen(buffer) <= 7) {
+        const char* message = "Please specify a topic or channel\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    std::string topic;
+    bool isTopic = false;
+    //check if the first param is a channel and set topic if there is a second param
+    std::string channelName = buffer + 7;
+    // check if there is a second param (topic) then var std::string topic
+    if (channelName.find(" ") != std::string::npos) {
+        topic = channelName.substr(channelName.find(" ") + 1);
+        channelName = channelName.substr(0, channelName.find(" "));
+        isTopic = true;
+    }
+    else {
+        channelName.erase(channelName.length() - 1);
+    }
+    if (_channels.find(channelName) != _channels.end()) {
+        // check if there is argument after the channel name (topic name)
+        if (isTopic) {
+            // check if operator
+            if (!_channels[channelName]->isOperator(senderClient->_name)) {
+                const char* message = "You don't have the required rights to execute this command\n";
+                send(clientSocket, message, std::strlen(message), 0);
+                return;
+            }
+            _channels[channelName]->setTopic(topic);
+            return;
+        }
+        else {
+            //show topic of given channel
+            std::string topic = _channels[channelName]->getTopic();
+            send(clientSocket, topic.c_str(), topic.length(), 0);
+        }
+        return;
+    }
+    else {
+        const char* message = "Channel does not exist\n";
+        send(clientSocket, message, std::strlen(message), 0);
+    }
+}
+
+void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    std::string newNick = buffer + 6;
+    if (newNick.length() <= 1) {
+        const char* message = "Please specify a nickname\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    newNick.erase(newNick.length() - 1);
+    for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->_name == newNick) {
+            const char* message = "Nickname already taken\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+    }
+    std::string message = "Your nickname has been changed to " + newNick + "\n";
+    send(clientSocket, message.c_str(), message.length(), 0);
+    senderClient->nickname = newNick;
 }
 
 void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -306,7 +374,7 @@ void Server::bindSocket() {
 
     // Récupération hostname
     struct hostent *host;   
-    const char *hostname = "www.syakovle-42.fr"; // Nom de l'hôte à résoudre
+    const char *hostname = "localhost"; // Nom de l'hôte à résoudre
 
     // Résolution du nom d'hôte
     host = gethostbyname(hostname);
@@ -449,7 +517,7 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 8; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return;

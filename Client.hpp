@@ -18,6 +18,7 @@ class Client {
 public:
     Client(int _socket, const std::string& _name);
     Channel *currentChannel;
+    std::string nickname;
 
 public:
     int _socket;

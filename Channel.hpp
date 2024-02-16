@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/15 17:04:43 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/16 15:47:59 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <string>
 #include <map>
 #include "Client.hpp"
+#include "Serveur.hpp"
 
 class Client;
 
@@ -27,6 +28,7 @@ class Channel {
         unsigned int        _limit;
         // Client (const*)Founder = clients[0];
         std::string         _name;
+        std::string         _topic;
         std::string         _password;
 
     public :
@@ -47,6 +49,9 @@ class Channel {
 
         void setPasswd(std::string &passwd);
         void removePasswd();
+
+        void setTopic(std::string &topic);
+        std::string getTopic();
         //Functions to add or remove operators
 };
 
