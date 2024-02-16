@@ -31,6 +31,34 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[6].function = &Server::changeNick;
     _commands[7].name = "/TOPIC";
     _commands[7].function = &Server::changeTopic;
+    _commands[8].name = "/INVITE";
+    _commands[8].function = &Server::inviteUser;
+}
+
+void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    std::string clientToInviteName = buffer + 8;
+    clientToInviteName.erase(clientToInviteName.length() - 1);
+    std::deque<Client>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        if (it->_name == clientToInviteName)
+            break;
+    if (it == _clients.end())
+        return;
+    if (!senderClient->currentChannel->isInviteOnly() || senderClient->currentChannel->isOperator(senderClient->_name)) {
+        if (senderClient->currentChannel->_invited.count(clientToInviteName)) {
+            senderClient->currentChannel->_invited.erase(clientToInviteName);
+            std::string message = "\nYour invitation to " + senderClient->currentChannel->_name + " has been canceled.\n";
+            send(it->_socket, message.c_str(), message.length(), 0);
+        } else {
+            senderClient->currentChannel->_invited[clientToInviteName] = &(*it);
+            std::string message = "You have been invited to " + senderClient->currentChannel->_name + ".\n";
+            send(it->_socket, message.c_str(), message.length(), 0);
+        }
+    }
+    else {
+        std::string message = "\nError: You don't have the required rights to execute this command\n";
+        send(clientSocket, message.c_str(), message.length(), 0);
+    }
 }
 
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -237,7 +265,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         channelname2 = channelname2.substr(0, space_pos);
     }
     std::cout << buffer << channelname2 << std::endl;
-    
+
     if (channelname2.length() <= 0) {
         const char* message = "Please specify a channel name\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -385,7 +413,7 @@ void Server::bindSocket() {
     std::cout << "Port: " << ntohs(serverAddress.sin_port) << std::endl;
 
     // Récupération hostname
-    struct hostent *host;   
+    struct hostent *host;
     const char *hostname = "localhost"; // Nom de l'hôte à résoudre
 
     // Résolution du nom d'hôte
@@ -529,13 +557,13 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return;
         }
     }
-    
+
     std::string message = "\nUnknown command\n\0";
     send(clientSocket, message.c_str(), message.length(), 0);
 }

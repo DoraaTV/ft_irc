@@ -30,6 +30,8 @@ const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
 
 class Server;
+class Client;
+class Channel;
 
 struct Command {
     std::string name;
@@ -55,6 +57,7 @@ public:
     void setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void inviteUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
 
 
 private:
