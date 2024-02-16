@@ -61,6 +61,11 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
                 send(clientSocket, message, std::strlen(message), 0);
                 return;
             }
+            if (!_channels[channelName]->_canSetTopic) {
+                const char* message = "You can't set the topic\n";
+                send(clientSocket, message, std::strlen(message), 0);
+                return;
+            }
             _channels[channelName]->setTopic(topic);
             return;
         }
@@ -209,6 +214,12 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
             return;
         }
         senderClient->currentChannel->removePasswd();
+    }
+    else if (!strncmp(mode, "+t", 2)) {
+        senderClient->currentChannel->setModeTopic(true);
+    }
+    else if (!strncmp(mode, "-t", 2)) {
+        senderClient->currentChannel->setModeTopic(false);
     }
     else {
         const char* message = "Unknown mode\n";

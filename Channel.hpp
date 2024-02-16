@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/16 15:47:59 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/16 16:17:20 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class Channel {
         bool                _isInviteOnly;
         bool                _isPasswordProtected;
         unsigned int        _limit;
+        bool               _canSetTopic;
         // Client (const*)Founder = clients[0];
         std::string         _name;
         std::string         _topic;
@@ -52,6 +53,7 @@ class Channel {
 
         void setTopic(std::string &topic);
         std::string getTopic();
+        void setModeTopic(bool mode);
         //Functions to add or remove operators
 };
 

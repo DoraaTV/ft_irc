@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/16 16:12:12 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/16 16:17:31 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
     _isPasswordProtected = false;
     _operators[founder._name] = &founder;
     _topic = "No topic";
+    _canSetTopic = true;
     ClientJoin(founder);
 }
 
@@ -30,6 +31,10 @@ Channel::~Channel() {
 
 bool Channel::isOperator(const std::string &clientName) {
     return _operators.count(clientName);
+}
+
+void Channel::setModeTopic(bool mode) {
+    _canSetTopic = mode;
 }
 
 void Channel::setTopic(std::string &topic) {
