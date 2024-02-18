@@ -160,10 +160,24 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    (void)buffer;
-    (void)clientSocket;
-    if (senderClient->currentChannel)
-        senderClient->currentChannel->ClientLeft(*senderClient);
+
+    // should be /LEAVE <channel name>,<channel name>,<channel name>...
+ 
+    std::vector<std::string> tokens = split(buffer + 7, ',');
+    if (tokens.empty()) {
+        const char* message = "Please specify a channel name\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    std::string channelNames = tokens[0];
+    // if there is \n at the end of the last channel name
+    if (tokens[tokens.size() - 1].find("\n") != std::string::npos)
+        tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
+    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+        if (_channels[*it]) {
+            _channels[*it]->ClientLeft(*senderClient);
+        }
+    }
 }
 
 void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -293,43 +307,91 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
 
 void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
-    //split the buffer to get the channel name and password
-    char delim = ' ';
-    std::vector<std::string> tokens = split(buffer, delim);
+    std::vector<std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 2) {
         const char* message = "Please specify a channel name\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
-    std::string channelName = tokens[1];
-    channelName.erase(channelName.length() - 1);
     if (tokens.size() > 3) {
-        // too many arguments
         const char* message = "Too many arguments\n";
         send(clientSocket, message, std::strlen(message), 0);
+        return;
     }
-    else if (tokens.size() == 3) {
+    std::vector<std::string> tokens2 = split(tokens[1], ',');
+    if (tokens.size() == 3) {
         std::string password = tokens[2];
-        if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
-            const char* message = "Wrong password\n";
-            send(clientSocket, message, std::strlen(message), 0);
-            return;
+        //if there is \n at the end of the password
+        if (password.find("\n") != std::string::npos)
+            password.erase(password.length() - 1);
+        for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
+            if (_channels[*it]) {
+                if (_channels[*it]->_isPasswordProtected && _channels[*it]->_password != password) {
+                    const char* message = "Wrong password\n";
+                    send(clientSocket, message, std::strlen(message), 0);
+                    return;
+                }
+                _channels[*it]->ClientJoin(*senderClient);
+            }
         }
-        _channels[channelName]->ClientJoin(*senderClient);
     }
     else {
-        if (_channels[channelName]) {
-            if (_channels[channelName]->_isPasswordProtected) {
-                const char* message = "Please specify a password\n";
-                send(clientSocket, message, std::strlen(message), 0);
-                return;
+        // if there is \n at the end of the last channel name
+        if (tokens2[tokens2.size() - 1].find("\n") != std::string::npos)
+            tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
+        for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
+            if (_channels[*it]) {
+                if (_channels[*it]->_isPasswordProtected) {
+                    const char* message = "Please specify a password\n";
+                    send(clientSocket, message, std::strlen(message), 0);
+                    return;
+                }
+                _channels[*it]->ClientJoin(*senderClient);
             }
-            _channels[channelName]->ClientJoin(*senderClient);
-        }
-        else {
-            _channels[channelName] = new Channel(*senderClient, channelName);
+            else {
+                _channels[*it] = new Channel(*senderClient, *it);
+            }
         }
     }
+
+
+    // //split the buffer to get the channel name and password
+    // char delim = ' ';
+    // std::vector<std::string> tokens = split(buffer, delim);
+    // if (tokens.size() < 2) {
+    //     const char* message = "Please specify a channel name\n";
+    //     send(clientSocket, message, std::strlen(message), 0);
+    //     return;
+    // }
+    // std::string channelName = tokens[1];
+    // channelName.erase(channelName.length() - 1);
+    // if (tokens.size() > 3) {
+    //     // too many arguments
+    //     const char* message = "Too many arguments\n";
+    //     send(clientSocket, message, std::strlen(message), 0);
+    // }
+    // else if (tokens.size() == 3) {
+    //     std::string password = tokens[2];
+    //     if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
+    //         const char* message = "Wrong password\n";
+    //         send(clientSocket, message, std::strlen(message), 0);
+    //         return;
+    //     }
+    //     _channels[channelName]->ClientJoin(*senderClient);
+    // }
+    // else {
+    //     if (_channels[channelName]) {
+    //         if (_channels[channelName]->_isPasswordProtected) {
+    //             const char* message = "Please specify a password\n";
+    //             send(clientSocket, message, std::strlen(message), 0);
+    //             return;
+    //         }
+    //         _channels[channelName]->ClientJoin(*senderClient);
+    //     }
+    //     else {
+    //         _channels[channelName] = new Channel(*senderClient, channelName);
+    //     }
+    // }
     // std::string password;
 
     // std::string channelname2 = buffer + 6;
@@ -570,15 +632,6 @@ void Server::handleExistingConnection(int clientSocket) {
             // Client trouvé, le supprimer
             // std::string leaveMessage = it->_name + " has left the chat.\n";
             // broadcastMessage(clientSocket, leaveMessage);
-
-            Channel *currentChannel = it->currentChannel;
-            if (currentChannel) {
-                it->currentChannel->ClientLeft(*it);
-                if (currentChannel->_operators.empty()) {
-                    _channels.erase(currentChannel->_name);
-                    delete currentChannel;
-                }
-            }
             _clients.erase(it);
         }
 

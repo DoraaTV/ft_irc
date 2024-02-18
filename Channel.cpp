@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/16 21:42:54 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/18 14:42:37 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,8 @@ void Channel::ClientJoin(Client &client) {
     std::string message = "\033[32m\n" + client._name + " has joined the channel !\n\033[0m";
     broadcastMessage(message);
     _clients[client._name] = &client;
-    client.currentChannel = this;
+    client._channels.push_back(this);
+    client.currentChannel = client._channels.back();
     std::string notification = "\033[32mYou joined [" + _name + "] !\n\033[0m";
     send((client)._socket, notification.c_str(), notification.length(), 0);
 
@@ -115,7 +116,11 @@ void Channel::removeOperator(std::string &clientName) {
 void Channel::ClientLeft(Client &client) {
     std::string notification = "\033[32mYou left [" + _name + "] !\n\033[0m";
     send((client)._socket, notification.c_str(), notification.length(), 0);
-    client.currentChannel = NULL;
+    client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
+    if (client._channels.size())
+        client.currentChannel = client._channels.back();
+    else
+        client.currentChannel = NULL;
     _clients.erase(client._name);
     std::string message = "\033[32m\n" + client._name + " has left the channel !\n\033[0m";
     broadcastMessage(message);
