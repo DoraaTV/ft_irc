@@ -128,6 +128,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     std::string message = "Your nickname has been changed to " + newNick + "\n";
     send(clientSocket, message.c_str(), message.length(), 0);
     senderClient->nickname = newNick;
+    senderClient->_name = newNick;
 }
 
 void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -168,13 +169,36 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
 void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     if (senderClient->currentChannel->isOperator(senderClient->_name)) {
         std::string clientToKick = buffer + 6;
-        clientToKick.erase(clientToKick.length() - 1);
-        if (clientToKick.compare(senderClient->_name))
-            senderClient->currentChannel->ClientKick(clientToKick);
-        else {
-            std::string message = "\nError: You can't kick yourself\n";
-            send(clientSocket, message.c_str(), message.length(), 0);
+        std::vector<std::string> tokens = split(clientToKick, ',');
+        if (tokens.size() <= 1) {
+            const char* message = "Please specify a client to kick\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
         }
+        // if there is \n at the end of the last client name
+        if (tokens[tokens.size() - 1].find("\n") != std::string::npos)
+            tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
+        //kick all user in the list
+        for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+            std::cout << "Kicking : " << *it << senderClient->currentChannel->_clients.count(*it) << std::endl;
+            if (senderClient->currentChannel->_clients.count(*it)) {
+                Client &client = *(senderClient->currentChannel->_clients[*it]);
+                std::string notification = "\033[31mYou have been kicked from [" + senderClient->currentChannel->_name + "] !\n\033[0m";
+                send((client)._socket, notification.c_str(), notification.length(), 0);
+                client.currentChannel = NULL;
+                senderClient->currentChannel->_clients.erase(client._name);
+                std::string message = "\033[31m\n" + client._name + " has been kicked from the channel !\n\033[0m";
+                senderClient->currentChannel->broadcastMessage(message);
+                senderClient->currentChannel->_operators.erase(client._name);
+            }
+        }
+        // clientToKick.erase(clientToKick.length() - 1);
+        // if (clientToKick.compare(senderClient->_name))
+        //     senderClient->currentChannel->ClientKick(clientToKick);
+        // else {
+        //     std::string message = "\nError: You can't kick yourself\n";
+        //     send(clientSocket, message.c_str(), message.length(), 0);
+        // }
 
     }
     else {
@@ -269,59 +293,98 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
 
 void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
-    std::string channelname2 = buffer + 6;
-    size_t space_pos = channelname2.find(" ");
-    std::string password;
-    if (space_pos != std::string::npos) {
-        password = channelname2.substr(space_pos + 1);
-        channelname2 = channelname2.substr(0, space_pos);
-    }
-    std::cout << buffer << channelname2 << std::endl;
-
-    if (channelname2.length() <= 0) {
+    //split the buffer to get the channel name and password
+    char delim = ' ';
+    std::vector<std::string> tokens = split(buffer, delim);
+    if (tokens.size() < 2) {
         const char* message = "Please specify a channel name\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
-    size_t pos = channelname2.find("\n");
-    if (pos != std::string::npos)
-        channelname2.erase(pos);
-    std::string channelName = channelname2;
-    // channelName.erase(channelName.length() - 1);
-    Channel *currentChannel = senderClient->currentChannel;
-    // if (currentChannel && !currentChannel->_isPasswordProtected)
-    //     channelName.erase(channelName.length() - 1);
-    if (currentChannel && currentChannel->_name == channelName) {
-        const char* message = "You are already in this channel\n";
+    std::string channelName = tokens[1];
+    channelName.erase(channelName.length() - 1);
+    if (tokens.size() > 3) {
+        // too many arguments
+        const char* message = "Too many arguments\n";
         send(clientSocket, message, std::strlen(message), 0);
-        return;
     }
-    if (currentChannel) {
-        senderClient->currentChannel->ClientLeft(*senderClient);
-        if (currentChannel->_operators.empty()) {
-            _channels.erase(currentChannel->_name);
-            delete currentChannel;
-        }
-    }
-    if (_channels[channelName]) {
-        if (_channels[channelName]->_isPasswordProtected && password.empty()) {
-            const char* message = "Please specify a password\n";
-            send(clientSocket, message, std::strlen(message), 0);
-            return;
-        }
-        if (password.empty())
-            password = " ";
-        password.erase(password.length() - 1);
+    else if (tokens.size() == 3) {
+        std::string password = tokens[2];
         if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
             const char* message = "Wrong password\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
-        std::cout << "clients socket: " << senderClient->_socket << std::endl;
         _channels[channelName]->ClientJoin(*senderClient);
     }
-    else
-        _channels[channelName] = new Channel(*senderClient, channelName);
+    else {
+        if (_channels[channelName]) {
+            if (_channels[channelName]->_isPasswordProtected) {
+                const char* message = "Please specify a password\n";
+                send(clientSocket, message, std::strlen(message), 0);
+                return;
+            }
+            _channels[channelName]->ClientJoin(*senderClient);
+        }
+        else {
+            _channels[channelName] = new Channel(*senderClient, channelName);
+        }
+    }
+    // std::string password;
+
+    // std::string channelname2 = buffer + 6;
+    // size_t space_pos = channelname2.find(" ");
+    // std::string password;
+    // if (space_pos != std::string::npos) {
+    //     password = channelname2.substr(space_pos + 1);
+    //     channelname2 = channelname2.substr(0, space_pos);
+    // }
+    // std::cout << buffer << channelname2 << std::endl;
+
+    // if (channelname2.length() <= 0) {
+    //     const char* message = "Please specify a channel name\n";
+    //     send(clientSocket, message, std::strlen(message), 0);
+    //     return;
+    // }
+    // size_t pos = channelname2.find("\n");
+    // if (pos != std::string::npos)
+    //     channelname2.erase(pos);
+    // std::string channelName = channelname2;
+    // // channelName.erase(channelName.length() - 1);
+    // Channel *currentChannel = senderClient->currentChannel;
+    // // if (currentChannel && !currentChannel->_isPasswordProtected)
+    // //     channelName.erase(channelName.length() - 1);
+    // if (currentChannel && currentChannel->_name == channelName) {
+    //     const char* message = "You are already in this channel\n";
+    //     send(clientSocket, message, std::strlen(message), 0);
+    //     return;
+    // }
+    // if (currentChannel) {
+    //     senderClient->currentChannel->ClientLeft(*senderClient);
+    //     if (currentChannel->_operators.empty()) {
+    //         _channels.erase(currentChannel->_name);
+    //         delete currentChannel;
+    //     }
+    // }
+    // if (_channels[channelName]) {
+    //     if (_channels[channelName]->_isPasswordProtected && password.empty()) {
+    //         const char* message = "Please specify a password\n";
+    //         send(clientSocket, message, std::strlen(message), 0);
+    //         return;
+    //     }
+    //     if (password.empty())
+    //         password = " ";
+    //     password.erase(password.length() - 1);
+    //     if (_channels[channelName]->_isPasswordProtected && _channels[channelName]->_password != password) {
+    //         const char* message = "Wrong password\n";
+    //         send(clientSocket, message, std::strlen(message), 0);
+    //         return;
+    //     }
+    //     std::cout << "clients socket: " << senderClient->_socket << std::endl;
+    //     _channels[channelName]->ClientJoin(*senderClient);
+    // }
+    // else
+    //     _channels[channelName] = new Channel(*senderClient, channelName);
 }
 
 void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {

@@ -15,6 +15,7 @@
 #include <map>
 #include <netdb.h>
 #include <sstream>
+#include <vector>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
@@ -28,6 +29,8 @@
 
 const int BACKLOG = 10;
 const int BUFFER_SIZE = 1024;
+
+std::vector<std::string> split(const std::string& s, char delimiter);
 
 class Server;
 class Client;
