@@ -52,7 +52,7 @@ public:
     void handleExistingConnection(int clientSocket);
     void broadcastMessage(int senderSocket, const std::string& message);
     void showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
-    void handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    int handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);

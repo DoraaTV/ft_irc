@@ -1,6 +1,7 @@
 #include "Serveur.hpp"
 #include "Channel.hpp"
 #include <string>
+#include <stdio.h>
 
 struct ClientFinder {
     int socketToFind;
@@ -15,23 +16,23 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     FD_ZERO(&_masterSet);
     FD_SET(_serverSocket, &_masterSet);
     _maxFd = _serverSocket;
-    _commands[0].name = "/LIST";
+    _commands[0].name = "LIST";
     _commands[0].function = &Server::showChannels;
-    _commands[1].name = "/PRIVMSG";
+    _commands[1].name = "PRIVMSG";
     _commands[1].function = &Server::privateMessage;
-    _commands[2].name = "/JOIN";
+    _commands[2].name = "JOIN";
     _commands[2].function = &Server::joinChannel;
-    _commands[3].name = "/LEAVE";
+    _commands[3].name = "LEAVE";
     _commands[3].function = &Server::leaveChannel;
-    _commands[4].name = "/KICK";
+    _commands[4].name = "KICK";
     _commands[4].function = &Server::kickUser;
-    _commands[5].name = "/MODE";
+    _commands[5].name = "MODE";
     _commands[5].function = &Server::setMode;
-    _commands[6].name = "/NICK";
+    _commands[6].name = "NICK";
     _commands[6].function = &Server::changeNick;
-    _commands[7].name = "/TOPIC";
+    _commands[7].name = "TOPIC";
     _commands[7].function = &Server::changeTopic;
-    _commands[8].name = "/INVITE";
+    _commands[8].name = "INVITE";
     _commands[8].function = &Server::inviteUser;
 }
 
@@ -62,7 +63,8 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
 }
 
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    if (std::strlen(buffer) <= 7) {
+
+    if (std::strlen(buffer) <= 6) {
         const char* message = "Please specify a topic or channel\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
@@ -70,7 +72,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
     std::string topic;
     bool isTopic = false;
     //check if the first param is a channel and set topic if there is a second param
-    std::string channelName = buffer + 7;
+    std::string channelName = buffer + 6;
     // check if there is a second param (topic) then var std::string topic
     if (channelName.find(" ") != std::string::npos) {
         topic = channelName.substr(channelName.find(" ") + 1);
@@ -111,13 +113,16 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
 }
 
 void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    std::string newNick = buffer + 6;
+    
+    std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
         const char* message = "Please specify a nickname\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
     newNick.erase(newNick.length() - 1);
+    if (newNick[newNick.length() - 1] == '\r')
+        newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
             const char* message = "Nickname already taken\n";
@@ -136,7 +141,6 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
     (void)senderClient;
     std::string serverList = senderClient->_name + " Channel : Users Name\n";
     // const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
-    send(clientSocket, GREEN, std::strlen(GREEN), 0);
     send(clientSocket, serverList.c_str(), serverList.length(), 0);
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
         std::string channelName = it->first;
@@ -155,15 +159,14 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
         send(clientSocket, "\n", 1, 0);
     }
     send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-    send(clientSocket, ": End of /LIST\n\0", 16, 0);
-    send(clientSocket, RESET, std::strlen(RESET), 0);
+    send(clientSocket, ": End of /LIST", 14, 0);
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
     // should be /LEAVE <channel name>,<channel name>,<channel name>...
  
-    std::vector<std::string> tokens = split(buffer + 7, ',');
+    std::vector<std::string> tokens = split(buffer + 6, ',');
     if (tokens.empty()) {
         const char* message = "Please specify a channel name\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -172,6 +175,8 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
     std::string channelNames = tokens[0];
     // if there is \n at the end of the last channel name
     if (tokens[tokens.size() - 1].find("\n") != std::string::npos)
+        tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
+    if (tokens[tokens.size() - 1].find("\r") != std::string::npos)
         tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
         if (_channels[*it]) {
@@ -182,10 +187,15 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
 
 void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     if (senderClient->currentChannel->isOperator(senderClient->_name)) {
-        std::string clientToKick = buffer + 6;
+        std::string clientToKick = buffer + 5;
+        std::string buffer2 = buffer;
         std::vector<std::string> tokens = split(clientToKick, ',');
         if (tokens.size() <= 1) {
-            const char* message = "Please specify a client to kick\n";
+            send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
+            send(clientSocket, " ", 1, 0);
+            buffer2.erase(buffer2.length() - 1);
+            send(clientSocket, buffer2.c_str(), std::strlen(buffer), 0);
+            const char* message = " :Not enough parameters\n\r";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -197,11 +207,11 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
             std::cout << "Kicking : " << *it << senderClient->currentChannel->_clients.count(*it) << std::endl;
             if (senderClient->currentChannel->_clients.count(*it)) {
                 Client &client = *(senderClient->currentChannel->_clients[*it]);
-                std::string notification = "\033[31mYou have been kicked from [" + senderClient->currentChannel->_name + "] !\n\033[0m";
+                std::string notification = "You have been kicked from [" + senderClient->currentChannel->_name + "] !\n";
                 send((client)._socket, notification.c_str(), notification.length(), 0);
                 client.currentChannel = NULL;
                 senderClient->currentChannel->_clients.erase(client._name);
-                std::string message = "\033[31m\n" + client._name + " has been kicked from the channel !\n\033[0m";
+                std::string message = "\n" + client._name + " has been kicked from the channel !\n";
                 senderClient->currentChannel->broadcastMessage(message);
                 senderClient->currentChannel->_operators.erase(client._name);
             }
@@ -222,8 +232,8 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
 }
 
 void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    char *mode = buffer + 6;
-    std::string mode2 = buffer + 6;
+    char *mode = buffer + 5;
+    std::string mode2 = buffer + 5;
     if (mode2.length() <= 2){
         const char* message = "Please specify a mode\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -339,6 +349,8 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         // if there is \n at the end of the last channel name
         if (tokens2[tokens2.size() - 1].find("\n") != std::string::npos)
             tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
+        if (tokens2[tokens2.size() - 1].find("\r") != std::string::npos)
+            tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
             if (_channels[*it]) {
                 if (_channels[*it]->_isPasswordProtected) {
@@ -349,6 +361,8 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
                 _channels[*it]->ClientJoin(*senderClient);
             }
             else {
+                for (size_t i = 0; i < std::strlen(it->c_str()); i++)
+                    printf("name %d %c\n", it->c_str()[i], it->c_str()[i]);
                 _channels[*it] = new Channel(*senderClient, *it);
             }
         }
@@ -451,7 +465,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
 
 void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     (void)clientSocket;
-    std::string command = buffer + 8;
+    std::string command = buffer + 7;
     size_t space_pos = command.find(" ");
     if (space_pos != std::string::npos) {
         command = command.substr(space_pos + 1);
@@ -668,32 +682,30 @@ void Server::handleExistingConnection(int clientSocket) {
             std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
             if (senderClient != _clients.end()) {
                 //commande
-                if (buffer[0] == '/') {
-                    handleCommand(buffer, clientSocket, senderClient);
-                }
+                if (handleCommand(buffer, clientSocket, senderClient) == 0)
+                    return;
                 //message
-                else {
-                    std::string message = "\033[36m\n" + senderClient->_name + ": " + buffer + "\033[0m\0";
+                std::string message = "\n" + senderClient->_name + ": " + buffer;
                     //le client est dans un channel
-                    if (senderClient->currentChannel)
-                        senderClient->currentChannel->sendMessage(message, *senderClient);
-                    //broadcastMessage(clientSocket, message);
-                }
+                if (senderClient->currentChannel)
+                    senderClient->currentChannel->sendMessage(message, *senderClient);
+                //broadcastMessage(clientSocket, message);
             }
         }
     }
 }
 
-void Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+int Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     for (int i = 0; i < 9; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
-            return;
+            return 0;
         }
     }
+    return (1);
 
-    std::string message = "\nUnknown command\n\0";
-    send(clientSocket, message.c_str(), message.length(), 0);
+    // std::string message = "\nUnknown command\n\0";
+    // send(clientSocket, message.c_str(), message.length(), 0);
 }
 
 void Server::broadcastMessage(int senderSocket, const std::string& message) {

@@ -49,11 +49,11 @@ std::string Channel::getTopic() {
 void Channel::ClientKick(std::string &clientToKick) {
     if (_clients.count(clientToKick)) {
         Client &client = *(_clients[clientToKick]);
-        std::string notification = "\033[31mYou have been kicked from [" + _name + "] !\n\033[0m";
+        std::string notification = "You have been kicked from [" + _name + "] !\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         client.currentChannel = NULL;
         _clients.erase(client._name);
-        std::string message = "\033[31m\n" + client._name + " has been kicked from the channel !\n\033[0m";
+        std::string message = "\n" + client._name + " has been kicked from the channel !\n";
         broadcastMessage(message);
         _operators.erase(client._name);
     }
@@ -73,22 +73,22 @@ void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
     if (_limit && _clients.size() >= _limit) {
-        std::string notification = "\033[31mChannel [" + _name + "] is full !\n\033[0m";
+        std::string notification = "Channel [" + _name + "] is full !\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         return;
     }
     if (_isInviteOnly && _invited.find(client._name) == _invited.end()) {
-        std::string notification = "\033[31mYou are not invited to join [" + _name + "] !\n\033[0m";
+        std::string notification = "You are not invited to join [" + _name + "] !\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         return;
     }
     std::cout << "Client joined channel : " << _name << std::endl;
-    std::string message = "\033[32m\n" + client._name + " has joined the channel !\n\033[0m";
+    std::string message = "\n" + client._name + " has joined the channel !\n";
     broadcastMessage(message);
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
-    std::string notification = "\033[32mYou joined [" + _name + "] !\n\033[0m";
+    std::string notification = "You joined [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
 
 }
@@ -114,7 +114,7 @@ void Channel::removeOperator(std::string &clientName) {
 }
 
 void Channel::ClientLeft(Client &client) {
-    std::string notification = "\033[32mYou left [" + _name + "] !\n\033[0m";
+    std::string notification = "You left [" + _name + "] !\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
     client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
     if (client._channels.size())
@@ -122,7 +122,7 @@ void Channel::ClientLeft(Client &client) {
     else
         client.currentChannel = NULL;
     _clients.erase(client._name);
-    std::string message = "\033[32m\n" + client._name + " has left the channel !\n\033[0m";
+    std::string message = "\n" + client._name + " has left the channel !\n";
     broadcastMessage(message);
     _operators.erase(client._name);
 }
