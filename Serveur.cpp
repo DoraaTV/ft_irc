@@ -156,11 +156,12 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
         catch (std::exception &e) {
             continue;
         }
-        send(clientSocket, ":localhost 322 ", 14, 0);
+        send(clientSocket, ":localhost 322 ", 16, 0);
         std::string channelName = it->first;
         send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-        // send(clientSocket, "-", 1, 0);
-        // send(clientSocket, channelName.c_str(), channelName.length(), 0);
+        send(clientSocket, " ", 1, 0);
+        send(clientSocket, channelName.c_str(), channelName.length(), 0);
+        send(clientSocket, " ", 1, 0);
         // send(clientSocket, "\r\n", 2, 0);
         // show users in channel and their topic
         std::ostringstream oss;
@@ -168,13 +169,13 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
         std::string sizeStr = oss.str();
         // std::string sizeStr = std::to_string(it->second->_clients.size());
         send(clientSocket, sizeStr.c_str(), sizeStr.length(), 0);
-        send(clientSocket, " ", 1, 0);
+        send(clientSocket, " :", 3, 0);
         send(clientSocket, it->second->getTopic().c_str(), it->second->getTopic().length(), 0);
-        send(clientSocket, "\r\n", 2, 0);
+        send(clientSocket, "\r\n", 3, 0);
     }
-    send(clientSocket, ":localhost 323 ", 14, 0);
+    send(clientSocket, ":localhost 323 ", 16, 0);
     send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-    send(clientSocket, ": End of /LIST\r\n", 16, 0);
+    send(clientSocket, " :End of /LIST\r\n", 16, 0);
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
