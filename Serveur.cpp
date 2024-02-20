@@ -635,8 +635,6 @@ void Server::handleNewConnection(int _serverSocket) {
         _maxFd = clientSocket;
 
     std::cout << "New connection from " << "localhost" << " on socket " << clientSocket << std::endl; //récupérer l'addresse ip dynamiquement
-    // const char* welcomeMessage = ":localhost 001: Welcome to the chat room!";
-    // send(clientSocket, welcomeMessage, std::strlen(welcomeMessage), 0);
     //ajout du client dans la liste des clients
     _clients.push_back(Client(clientSocket, ""));
 }
@@ -687,6 +685,18 @@ void Server::handleExistingConnection(int clientSocket) {
             }
             // if name start by CAP
             if (!strncmp(buffer, "CAP", 3)) {
+                std::string message1 = ":syakovle!@localhost NICK syakovle\r\n";
+                send(clientSocket, message1.c_str(), message1.length(), 0);
+                std::string message2 = ":localhost 001 syakovle :Welcome to the Internet Relay Network :syakovle!syakovle@localhost\r\n";
+                send(clientSocket, message2.c_str(), message2.length(), 0);
+                std::string message3 = ":localhost 002 syakovle :Your host is 42_Ftirc (localhost), running version 1.1\r\n";
+                send(clientSocket, message3.c_str(), message3.length(), 0);
+                std::string message4 = ":localhost 003 syakovle :This server was created 20-02-2024 19:45:17\r\n";
+                send(clientSocket, message4.c_str(), message4.length(), 0);
+                std::string message5 = ":localhost 004 syakovle localhost 1.1 io kost k\r\n";
+                send(clientSocket, message5.c_str(), message5.length(), 0);
+                std::string message6 = ":localhost 005 syakovle CHANNELLEN=32 NICKLEN=9 TOPICLEN=307 :are supported by this server\r\n";
+                send(clientSocket, message6.c_str(), message6.length(), 0);
                 return;
             }
             if (!strncmp(buffer, "NICK", 4)) {
