@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/18 14:42:37 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/20 18:41:34 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ void Channel::ClientJoin(Client &client) {
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
-    std::string notification = ":thomas@localhost JOIN " + _name + "\r\n";
+    std::string notification = ":localhost JOIN " + _name + "\r\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
 }
 
