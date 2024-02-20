@@ -125,14 +125,19 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
-            const char* message = "Nickname already taken\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
+            std::string message = ":localhost 443 " + newNick + " :Nickname is already in use\r\n";
+            send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
     }
     std::string nickname2 = split(newNick, '\n')[0];
-    std::string message = "Your nickname has been changed to " + nickname2 + "\r\n";
-    send(clientSocket, message.c_str(), message.length(), 0);
+    if (senderClient->_name.empty()) {
+        std::string welcomeMessage = ":localhost 001 " + nickname2 + ": Welcome to the chat room!\r\n";
+        send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
+    } else {
+        std::string message = ":localhost 001 " + nickname2 + " Your nickname is now " + nickname2 + "\r\n";
+        send(clientSocket, message.c_str(), message.length(), 0);
+    }
     senderClient->nickname = nickname2;
     senderClient->_name = nickname2;
 }
@@ -627,8 +632,8 @@ void Server::handleNewConnection(int _serverSocket) {
         _maxFd = clientSocket;
 
     std::cout << "New connection from " << "localhost" << " on socket " << clientSocket << std::endl; //récupérer l'addresse ip dynamiquement
-    const char* welcomeMessage = ":localhost 001: Welcome to the chat room!";
-    send(clientSocket, welcomeMessage, std::strlen(welcomeMessage), 0);
+    // const char* welcomeMessage = ":localhost 001: Welcome to the chat room!";
+    // send(clientSocket, welcomeMessage, std::strlen(welcomeMessage), 0);
     //ajout du client dans la liste des clients
     _clients.push_back(Client(clientSocket, ""));
 }
@@ -677,7 +682,16 @@ void Server::handleExistingConnection(int clientSocket) {
                     break;
                 }
             }
-            it->_name = buffer;
+            // if name start by CAP
+            if (!strncmp(buffer, "CAP", 3)) {
+                return;
+            }
+            if (!strncmp(buffer, "NICK", 4)) {
+                changeNick(buffer, clientSocket, it);
+                return;
+            }
+            std::string welcomeMessage = "Error: Please use NICK to choose your nickname\r\n";
+            send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
             // std::cout << std::endl;
             // std::string message = it->_name + " has joined the channel !";
             // broadcastMessage(clientSocket, message);
@@ -688,7 +702,7 @@ void Server::handleExistingConnection(int clientSocket) {
         {
             //command COMMENCER PAR JOIN (create si existe pas)
             std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
-            if (senderClient != _clients.end()) {
+            if (senderClient != _clients.end() && !senderClient->_name.empty()) {
                 //commande
                 if (handleCommand(buffer, clientSocket, senderClient) == 0)
                     return;
