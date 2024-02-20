@@ -22,7 +22,7 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[1].function = &Server::privateMessage;
     _commands[2].name = "JOIN";
     _commands[2].function = &Server::joinChannel;
-    _commands[3].name = "LEAVE";
+    _commands[3].name = "PART";
     _commands[3].function = &Server::leaveChannel;
     _commands[4].name = "KICK";
     _commands[4].function = &Server::kickUser;
@@ -182,7 +182,7 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
 
     // should be /LEAVE <channel name>,<channel name>,<channel name>...
  
-    std::vector<std::string> tokens = split(buffer + 6, ',');
+    std::vector<std::string> tokens = split(buffer + 5, ',');
     if (tokens.empty()) {
         const char* message = "Please specify a channel name\r\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -481,7 +481,17 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
 
 void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     (void)clientSocket;
-    std::string command = buffer + 7;
+    std::string command = buffer + 8;
+    std::cout << "command: " << command << std::endl;
+    if (command[0] == '#') {
+        std::string channelName = command.substr(0, command.find(" "));
+        std::cout << "Channel name :" << channelName << std::endl;
+        std::string textToSend = command.substr(command.find(" ") + 1);
+        if (_channels.find(channelName) != _channels.end()) {
+            _channels[channelName]->sendMessage(senderClient->_name + ": " + textToSend, *senderClient);
+        }
+        return ;
+    }
     size_t space_pos = command.find(" ");
     if (space_pos != std::string::npos) {
         command = command.substr(space_pos + 1);

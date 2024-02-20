@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/20 18:41:34 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/20 22:21:56 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ void Channel::removeOperator(std::string &clientName) {
 }
 
 void Channel::ClientLeft(Client &client) {
-    std::string notification = "You left [" + _name + "] \r\n";
+    std::string notification = ":localhost PART " + _name+ ": " + client._name + " has left the channel !\r\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
     client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
     if (client._channels.size())
@@ -129,8 +129,10 @@ void Channel::ClientLeft(Client &client) {
 void Channel::sendMessage(const std::string &message, Client &sender) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
-        if ((*it).second != &sender)
-            send((*it).second->_socket, message.c_str(), message.length(), 0);
+        if ((*it).second != &sender) {
+            std::string notification = ":localhost PRIVMSG " + _name + " :" + message + "\r\n";
+            send((*it).second->_socket, notification.c_str(), notification.length(), 0);
+        }
     }
 }
 
@@ -151,6 +153,7 @@ void Channel::setLimit(unsigned int limit) {
 void Channel::broadcastMessage(const std::string &message) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
             std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
-            send((*it).second->_socket, message.c_str(), message.length(), 0);
+            std::string notification = ":localhost PRIVMSG " + _name + " :" + message + "\r\n";
+            send((*it).second->_socket, notification.c_str(), notification.length(), 0);
     }
 }
