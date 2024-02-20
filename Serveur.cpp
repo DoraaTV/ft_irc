@@ -48,16 +48,16 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
     if (!senderClient->currentChannel->isInviteOnly() || senderClient->currentChannel->isOperator(senderClient->_name)) {
         if (senderClient->currentChannel->_invited.count(clientToInviteName)) {
             senderClient->currentChannel->_invited.erase(clientToInviteName);
-            std::string message = "\nYour invitation to " + senderClient->currentChannel->_name + " has been canceled.\n";
+            std::string message = "Your invitation to " + senderClient->currentChannel->_name + " has been canceled.\r\n";
             send(it->_socket, message.c_str(), message.length(), 0);
         } else {
             senderClient->currentChannel->_invited[clientToInviteName] = &(*it);
-            std::string message = "You have been invited to " + senderClient->currentChannel->_name + ".\n";
+            std::string message = "You have been invited to " + senderClient->currentChannel->_name + ".\r\n";
             send(it->_socket, message.c_str(), message.length(), 0);
         }
     }
     else {
-        std::string message = "\nError: You don't have the required rights to execute this command\n";
+        std::string message = "\nError: You don't have the required rights to execute this command\r\n";
         send(clientSocket, message.c_str(), message.length(), 0);
     }
 }
@@ -65,7 +65,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
     if (std::strlen(buffer) <= 6) {
-        const char* message = "Please specify a topic or channel\n";
+        const char* message = "Please specify a topic or channel\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -87,12 +87,12 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         if (isTopic) {
             // check if operator
             if (!_channels[channelName]->isOperator(senderClient->_name)) {
-                const char* message = "You don't have the required rights to execute this command\n";
+                const char* message = "You don't have the required rights to execute this command\r\n";
                 send(clientSocket, message, std::strlen(message), 0);
                 return;
             }
             if (!_channels[channelName]->_canSetTopic) {
-                const char* message = "You can't set the topic\n";
+                const char* message = "You can't set the topic\r\n";
                 send(clientSocket, message, std::strlen(message), 0);
                 return;
             }
@@ -107,7 +107,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         return;
     }
     else {
-        const char* message = "Channel does not exist\n";
+        const char* message = "Channel does not exist\r\n";
         send(clientSocket, message, std::strlen(message), 0);
     }
 }
@@ -116,7 +116,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
-        const char* message = "Please specify a nickname\n";
+        const char* message = "Please specify a nickname\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -125,41 +125,49 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
-            const char* message = "Nickname already taken\n";
+            const char* message = "Nickname already taken\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
     }
-    std::string message = "Your nickname has been changed to " + newNick + "\n";
+    std::string nickname2 = split(newNick, '\n')[0];
+    std::string message = "Your nickname has been changed to " + nickname2 + "\r\n";
     send(clientSocket, message.c_str(), message.length(), 0);
-    senderClient->nickname = newNick;
-    senderClient->_name = newNick;
+    senderClient->nickname = nickname2;
+    senderClient->_name = nickname2;
 }
 
 void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     (void)buffer;
     (void)senderClient;
-    std::string serverList = senderClient->_name + " Channel : Users Name\n";
+    // size_t size;
+    // std::string serverList = senderClient->_name + " channel : users name\n";
     // const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
-    send(clientSocket, serverList.c_str(), serverList.length(), 0);
+    // send(clientSocket, serverList.c_str(), serverList.length(), 0);
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        // try {
+        //     size = it->second->_clients.size();
+        // }
+        // catch (std::exception &e) {
+        //     continue;
+        // }
         std::string channelName = it->first;
-        send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-        send(clientSocket, " ", 1, 0);
+        // send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
+        send(clientSocket, "-", 1, 0);
         send(clientSocket, channelName.c_str(), channelName.length(), 0);
-        send(clientSocket, " : ", 2, 0);
-        // show users in channel and their topic
-        std::ostringstream oss;
-        oss << it->second->_clients.size();
-        std::string sizeStr = oss.str();
-        // std::string sizeStr = std::to_string(it->second->_clients.size());
-        send(clientSocket, sizeStr.c_str(), sizeStr.length(), 0);
-        send(clientSocket, " ", 1, 0);
-        send(clientSocket, it->second->getTopic().c_str(), it->second->getTopic().length(), 0);
-        send(clientSocket, "\n", 1, 0);
+        send(clientSocket, "\r\n", 2, 0);
+        // // show users in channel and their topic
+        // std::ostringstream oss;
+        // oss << size;
+        // std::string sizeStr = oss.str();
+        // // std::string sizeStr = std::to_string(it->second->_clients.size());
+        // send(clientSocket, sizeStr.c_str(), sizeStr.length(), 0);
+        // send(clientSocket, " ", 1, 0);
+        // send(clientSocket, it->second->getTopic().c_str(), it->second->getTopic().length(), 0);
+        // send(clientSocket, "\n", 1, 0);
     }
-    send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-    send(clientSocket, ": End of /LIST", 14, 0);
+    // send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
+    // send(clientSocket, ": End of /LIST", 14, 0);
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -168,7 +176,7 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
  
     std::vector<std::string> tokens = split(buffer + 6, ',');
     if (tokens.empty()) {
-        const char* message = "Please specify a channel name\n";
+        const char* message = "Please specify a channel name\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -207,11 +215,11 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
             std::cout << "Kicking : " << *it << senderClient->currentChannel->_clients.count(*it) << std::endl;
             if (senderClient->currentChannel->_clients.count(*it)) {
                 Client &client = *(senderClient->currentChannel->_clients[*it]);
-                std::string notification = "You have been kicked from [" + senderClient->currentChannel->_name + "] !\n";
+                std::string notification = "You have been kicked from [" + senderClient->currentChannel->_name + "] !\r\n";
                 send((client)._socket, notification.c_str(), notification.length(), 0);
                 client.currentChannel = NULL;
                 senderClient->currentChannel->_clients.erase(client._name);
-                std::string message = "\n" + client._name + " has been kicked from the channel !\n";
+                std::string message = client._name + " has been kicked from the channel !\r\n";
                 senderClient->currentChannel->broadcastMessage(message);
                 senderClient->currentChannel->_operators.erase(client._name);
             }
@@ -226,7 +234,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
 
     }
     else {
-        std::string message = "\nError: You don't have the required rights to execute this command\n";
+        std::string message = "Error: You don't have the required rights to execute this command\r\n";
         send(clientSocket, message.c_str(), message.length(), 0);
     }
 }
@@ -235,17 +243,17 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     char *mode = buffer + 5;
     std::string mode2 = buffer + 5;
     if (mode2.length() <= 2){
-        const char* message = "Please specify a mode\n";
+        const char* message = "Please specify a mode\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
     if (!senderClient->currentChannel) {
-        const char* message = "You are not in a channel\n";
+        const char* message = "You are not in a channel\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
     else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
-        const char* message = "You are not an operator\n";
+        const char* message = "You are not an operator\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -264,7 +272,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "+o", 2)) {
         if (std::strlen(mode) <= 3) {
-            const char* message = "Please specify a client to op\n";
+            const char* message = "Please specify a client to op\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -273,7 +281,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "-o", 2)) {
         if (std::strlen(mode) <= 3) {
-            const char* message = "Please specify a client to deop\n";
+            const char* message = "Please specify a client to deop\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -282,14 +290,14 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "+k", 2)) {
         if (std::strlen(mode) <= 4) {
-            const char* message = "Please specify a password\n";
+            const char* message = "Please specify a password\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
         std::string password = mode + 3;
         password = password.substr(0, password.size() - 1);
         if (senderClient->currentChannel->_isPasswordProtected) {
-            const char* message = "Channel is already password protected\n";
+            const char* message = "Channel is already password protected\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -297,7 +305,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "-k", 2)) {
         if (!senderClient->currentChannel->_isPasswordProtected) {
-            const char* message = "Channel is not password protected\n";
+            const char* message = "Channel is not password protected\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -310,7 +318,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         senderClient->currentChannel->setModeTopic(false);
     }
     else {
-        const char* message = "Unknown mode\n";
+        const char* message = "Unknown mode\r\n";
         send(clientSocket, message, std::strlen(message), 0);
     }
 }
@@ -319,12 +327,12 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
 
     std::vector<std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 2) {
-        const char* message = "Please specify a channel name\n";
+        const char* message = "Please specify a channel name\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
     if (tokens.size() > 3) {
-        const char* message = "Too many arguments\n";
+        const char* message = "Too many arguments\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -337,7 +345,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
             if (_channels[*it]) {
                 if (_channels[*it]->_isPasswordProtected && _channels[*it]->_password != password) {
-                    const char* message = "Wrong password\n";
+                    const char* message = "Wrong password\r\n";
                     send(clientSocket, message, std::strlen(message), 0);
                     return;
                 }
@@ -354,7 +362,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
             if (_channels[*it]) {
                 if (_channels[*it]->_isPasswordProtected) {
-                    const char* message = "Please specify a password\n";
+                    const char* message = "Please specify a password\r\n";
                     send(clientSocket, message, std::strlen(message), 0);
                     return;
                 }
@@ -475,7 +483,7 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
             std::string textToSend = command.substr(space_pos + 1);
             for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
                 if (it->_name == receiverName) {
-                    std::string message = "Private Message from " + senderClient->_name + ": " + textToSend;
+                    std::string message = "Private Message from " + senderClient->_name + ": " + textToSend + "\r\n";
                     send(it->_socket, message.c_str(), message.length(), 0);
                     break;
                 }
@@ -619,7 +627,7 @@ void Server::handleNewConnection(int _serverSocket) {
         _maxFd = clientSocket;
 
     std::cout << "New connection from " << "localhost" << " on socket " << clientSocket << std::endl; //récupérer l'addresse ip dynamiquement
-    const char* welcomeMessage = "Welcome to the chat room!\nPlease, choose a nickname: ";
+    const char* welcomeMessage = ":localhost 001: Welcome to the chat room!";
     send(clientSocket, welcomeMessage, std::strlen(welcomeMessage), 0);
     //ajout du client dans la liste des clients
     _clients.push_back(Client(clientSocket, ""));
@@ -673,7 +681,7 @@ void Server::handleExistingConnection(int clientSocket) {
             // std::cout << std::endl;
             // std::string message = it->_name + " has joined the channel !";
             // broadcastMessage(clientSocket, message);
-            showChannels(buffer, clientSocket, it);
+            // showChannels(buffer, clientSocket, it);
         }
         //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
         else
@@ -685,10 +693,12 @@ void Server::handleExistingConnection(int clientSocket) {
                 if (handleCommand(buffer, clientSocket, senderClient) == 0)
                     return;
                 //message
-                std::string message = "\n" + senderClient->_name + ": " + buffer;
                     //le client est dans un channel
                 if (senderClient->currentChannel)
+                {
+                    std::string message = "\n(" + senderClient->currentChannel->_name + ") "+ senderClient->_name + ": " + buffer + "\r\n";
                     senderClient->currentChannel->sendMessage(message, *senderClient);
+                }
                 //broadcastMessage(clientSocket, message);
             }
         }

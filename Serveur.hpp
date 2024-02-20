@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <sstream>
 #include <vector>
+#include <exception>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
