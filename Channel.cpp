@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/20 22:21:56 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/20 23:09:22 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ void Channel::ClientJoin(Client &client) {
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
-    std::string notification = ":localhost JOIN " + _name + "\r\n";
+    std::string notification = ":" + client._name + "@localhost JOIN " + _name + "\r\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
 }
 
@@ -113,7 +113,7 @@ void Channel::removeOperator(std::string &clientName) {
 }
 
 void Channel::ClientLeft(Client &client) {
-    std::string notification = ":localhost PART " + _name+ ": " + client._name + " has left the channel !\r\n";
+    std::string notification = ":" + client._name + "@localhost PART " + _name + "\r\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
     client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
     if (client._channels.size())
