@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 12:27:05 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 12:28:56 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,6 @@ void Channel::sendMessage(const std::string &message, Client &sender) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
         if ((*it).second != &sender) {
-            // if content start by : remove the :
             std::string messageToSend = message;
             if (messageToSend[0] == ':')
                 messageToSend = messageToSend.substr(1);
