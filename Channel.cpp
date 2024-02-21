@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 18:34:01 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 18:39:43 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,6 +136,11 @@ void Channel::ClientLeft(Client &client) {
         client.currentChannel = NULL;
     _operators.erase(client._name);
     _clients.erase(client._name);
+    // if no operator left, the first client becomes operator
+    if (_operators.size() == 0 && _clients.size() > 0) {
+        std::string name2 = _clients.begin()->first;
+        addOperator(name2);
+    }
     broadcastMessage(notification);
     nbClients--;
 }
