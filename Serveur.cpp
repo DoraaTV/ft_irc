@@ -53,13 +53,18 @@ void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator 
         send(clientSocket, message.c_str(), message.length(), 0);
         return;
     }
-    std::string clientToFind = buffer + 7;
+    std::string clientToFind = buffer + 6;
     if (clientToFind[clientToFind.length() - 1] == '\n')
         clientToFind.erase(clientToFind.length() - 1);
+    if (clientToFind[clientToFind.length() - 1] == '\r')
+        clientToFind.erase(clientToFind.length() - 1);
     std::deque<Client>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it)
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        for (size_t i = 0; i < std::strlen(it->_name.c_str()); i++)
+                    printf("name2 %d %c\n", it->_name.c_str()[i], it->_name.c_str()[i]);
         if (it->_name == clientToFind)
-            break;
+            break ;
+    }
     if (it == _clients.end()) {
         const char* message = ":localhost 401 :No such nick\r\n";
         send(clientSocket, message, std::strlen(message), 0);
@@ -67,12 +72,10 @@ void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator 
     }
     std::string message = ":localhost 311 " + senderClient->_name + " " + it->_name + " localhost 8080\r\n";
     send(clientSocket, message.c_str(), message.length(), 0);
-    //list all channels the client is in
-    for (std::map<std::string, Channel*>::iterator it2 = _channels.begin(); it2 != _channels.end(); ++it2) {
-        if (it2->second->_clients.count(it2->second->_name)) {
-            std::string message = ":localhost 319 " + senderClient->_name + " " + it2->second->_name + "\r\n";
-            send(clientSocket, message.c_str(), message.length(), 0);
-        }
+    //list all channels the client is in from his _channels vector
+    for (std::vector<Channel *>::iterator it2 = it->_channels.begin(); it2 != it->_channels.end(); ++it2) {
+        std::string message = ":localhost 319 " + senderClient->_name + " " + it->_name + " " + (*it2)->_name + "\r\n";
+        send(clientSocket, message.c_str(), message.length(), 0);
     }
     // end of list
     std::string message2 = ":localhost 318 " + senderClient->_name + it->_name + " :End of /WHOIS list\r\n";
@@ -159,7 +162,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
-        const char* message = "Please specify a nickname\r\n";
+        const char* message = ":localhost 431 :Please specify a nickname\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -531,7 +534,13 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
         std::cout << "Channel name :" << channelName << std::endl;
         std::string textToSend = command.substr(command.find(" ") + 1);
         if (_channels.find(channelName) != _channels.end()) {
-            _channels[channelName]->sendMessage(senderClient->_name + ": " + textToSend, *senderClient);
+            if (_channels[channelName]->_clients.count(senderClient->_name)) {
+                _channels[channelName]->sendMessage(senderClient->_name + ": " + textToSend, *senderClient);
+            }
+            else {
+                const char* message = "You are not in this channel\n";
+                send(clientSocket, message, std::strlen(message), 0);
+            }
         }
         return ;
     }
