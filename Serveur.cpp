@@ -34,6 +34,49 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[7].function = &Server::changeTopic;
     _commands[8].name = "INVITE";
     _commands[8].function = &Server::inviteUser;
+    _commands[9].name = "PING";
+    _commands[9].function = &Server::ping;
+    _commands[10].name = "WHOIS";
+    _commands[10].function = &Server::whois;
+}
+
+void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    (void)buffer;
+    (void)senderClient;
+    std::string message = "PONG :localhost\r\n";
+    send(clientSocket, message.c_str(), message.length(), 0);
+}
+
+void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    if (std::strlen(buffer) <= 7) {
+        std::string message = ":localhost 431" + senderClient->_name + ":Please specify a client to find\r\n";
+        send(clientSocket, message.c_str(), message.length(), 0);
+        return;
+    }
+    std::string clientToFind = buffer + 7;
+    if (clientToFind[clientToFind.length() - 1] == '\n')
+        clientToFind.erase(clientToFind.length() - 1);
+    std::deque<Client>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it)
+        if (it->_name == clientToFind)
+            break;
+    if (it == _clients.end()) {
+        const char* message = ":localhost 401 :No such nick\r\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    std::string message = ":localhost 311 " + senderClient->_name + " " + it->_name + " localhost 8080\r\n";
+    send(clientSocket, message.c_str(), message.length(), 0);
+    //list all channels the client is in
+    for (std::map<std::string, Channel*>::iterator it2 = _channels.begin(); it2 != _channels.end(); ++it2) {
+        if (it2->second->_clients.count(it2->second->_name)) {
+            std::string message = ":localhost 319 " + senderClient->_name + " " + it2->second->_name + "\r\n";
+            send(clientSocket, message.c_str(), message.length(), 0);
+        }
+    }
+    // end of list
+    std::string message2 = ":localhost 318 " + senderClient->_name + it->_name + " :End of /WHOIS list\r\n";
+    send(clientSocket, message2.c_str(), message2.length(), 0);
 }
 
 void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -743,7 +786,7 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 int Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 11; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return 0;

@@ -62,12 +62,15 @@ public:
     void changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void inviteUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void whois(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    void ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+
 
 
 private:
     int _serverSocket;
     int _port;
-    Command _commands[9];
+    Command _commands[11];
     std::deque<Client> _clients;
     fd_set _masterSet;
     int _maxFd;
