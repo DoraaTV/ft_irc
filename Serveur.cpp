@@ -42,6 +42,13 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
 
 void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     (void)buffer;
+
+    // leaves all channels he is in using broadcastMessage to send a message to all clients in the channel
+    for (std::vector<Channel *>::iterator it = senderClient->_channels.begin(); it != senderClient->_channels.end(); ++it) {
+        std::string message = ":" + senderClient->_name + " PART " + (*it)->_name + " :Leaving\r\n";
+        (*it)->broadcastMessage(message);
+        (*it)->ClientLeft(*senderClient);
+    }
     std::string message = "QUIT :Leaving\r\n";
     send(clientSocket, message.c_str(), message.length(), 0);
     close(clientSocket);
