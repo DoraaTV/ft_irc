@@ -193,6 +193,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
 
 void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     
+    std::cout << senderClient->_name << std::endl;
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
         const char* message = ":localhost 431 :Please specify a nickname\r\n";
@@ -742,6 +743,12 @@ void Server::handleExistingConnection(int clientSocket) {
     char buffer[BUFFER_SIZE] = {};
     ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
     std::deque<Client>::iterator it = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+    if (it->_name.empty()) {
+        std::cout << "Client " << clientSocket << " is not identified" << std::endl;
+    }
+    else {
+        std::cout << "Client " << clientSocket << " is identified as " << it->_name << std::endl;
+    }
     if (bytesReceived <= 0) {
         // Gérer la déconnexion ou l'erreur
         if (bytesReceived == 0) {
@@ -802,8 +809,8 @@ void Server::handleExistingConnection(int clientSocket) {
                 changeNick(buffer, clientSocket, it);
                 return;
             }
-            std::string welcomeMessage = "Error: Please use NICK to choose your nickname\r\n";
-            send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
+            std::string notRegistered = ":localhost 451 :You have not registered\r\n";
+            send(clientSocket, notRegistered.c_str(), notRegistered.length(), 0);
             // std::cout << std::endl;
             // std::string message = it->_name + " has joined the channel !";
             // broadcastMessage(clientSocket, message);
