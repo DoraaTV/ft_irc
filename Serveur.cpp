@@ -47,7 +47,7 @@ void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator s
     for (std::vector<Channel *>::iterator it = senderClient->_channels.begin(); it != senderClient->_channels.end(); ++it) {
         std::string message = ":" + senderClient->_name + " PART " + (*it)->_name + " :Leaving\r\n";
         (*it)->broadcastMessage(message);
-        (*it)->ClientLeft(*senderClient);
+        // (*it)->ClientLeft(*senderClient);
     }
     std::string message = "QUIT :Leaving\r\n";
     send(clientSocket, message.c_str(), message.length(), 0);
