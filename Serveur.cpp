@@ -175,13 +175,18 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
                 send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                 return;
             }
+            if (topic[0] == ':')
+                topic = topic.substr(1, topic.length() - 1);
             _channels[channelName]->setTopic(topic);
+            std::string message = ":localhost 332 " + senderClient->_name + " " + channelName + " :" + topic + "\r\n";
+            _channels[channelName]->broadcastMessage(message);
             return;
         }
         else {
             //show topic of given channel
             std::string topic = _channels[channelName]->getTopic();
-            send(clientSocket, topic.c_str(), topic.length(), 0);
+            std::string message = ":localhost 332 " + senderClient->_name + " " + channelName + " :" + topic + "\r\n";
+            _channels[channelName]->broadcastMessage(message);
         }
         return;
     }

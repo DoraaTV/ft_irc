@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 17:25:53 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 17:51:19 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,9 @@ void Channel::ClientJoin(Client &client) {
     send((client)._socket, notification.c_str(), notification.length(), 0);
     broadcastMessage(notification);
     nbClients++;
+    std::string message = ":localhost 332 " + client._name + " " + _name + " :" + _topic + "\r\n";
+    std::cout << message << std::endl;
+    send((client)._socket, message.c_str(), message.length(), 0);
 }
 
 void Channel::addOperator(std::string &clientName) {
