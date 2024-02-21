@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 13:42:10 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 14:35:42 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 Channel::Channel(Client &founder, std::string name) : _name(name) {
     _limit = 10;
+    nbClients = 0;
     _isInviteOnly = false;
     _isPasswordProtected = false;
     _operators[founder._name] = &founder;
@@ -91,6 +92,7 @@ void Channel::ClientJoin(Client &client) {
     std::string notification = ":" + client._name + "@localhost JOIN " + _name + "\r\n";
     std::cout << notification << std::endl;
     send((client)._socket, notification.c_str(), notification.length(), 0);
+    nbClients++;
 }
 
 void Channel::addOperator(std::string &clientName) {
@@ -125,7 +127,8 @@ void Channel::ClientLeft(Client &client) {
     _clients.erase(client._name);
     std::string message = client._name + " has left the channel !\r\n";
     broadcastMessage(message);
-    _operators.erase(client._name);
+    _operators.erase(client._name);\
+    nbClients--;
 }
 
 void Channel::sendMessage(const std::string &message, Client &sender) {

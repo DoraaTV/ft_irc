@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/16 16:17:20 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 14:34:05 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ class Channel {
         bool                _isPasswordProtected;
         unsigned int        _limit;
         bool               _canSetTopic;
+        int                 nbClients;
         // Client (const*)Founder = clients[0];
         std::string         _name;
         std::string         _topic;

@@ -89,15 +89,44 @@ void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator 
 }
 
 void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    std::string clientToInviteName = buffer + 8;
-    clientToInviteName.erase(clientToInviteName.length() - 1);
+
+    //set senderClient the current channel to the channel he wants to invite to, command must be /INVITE <client name> <channel name>
+    std::string channelName = buffer + 7;
+    std::string clientToInviteName;
+    std::cout << "channelName1: " << channelName << std::endl;
+    std::vector<std::string> tokens = split(channelName, ' ');
+    if (tokens.size() < 2) {
+        const char* message = ":localhost 461 :Not enough parameters\r\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    clientToInviteName = tokens[0];
+    if (clientToInviteName.find("\n") != std::string::npos)
+        clientToInviteName.erase(clientToInviteName.length() - 1);
+    if (clientToInviteName.find("\r") != std::string::npos)
+        clientToInviteName.erase(clientToInviteName.length() - 1);
+
+    channelName = tokens[1];
+    if (channelName.find("\n") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
+    if (channelName.find("\r") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
     std::deque<Client>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it)
         if (it->_name == clientToInviteName)
             break;
+    std::cout << "clientToInviteName: " << clientToInviteName << std::endl;
     if (it == _clients.end())
+    {
+        // show each char of clientToInviteName for debug
+        for (size_t i = 0; i < std::strlen(clientToInviteName.c_str()); i++)
+            printf("name %d %c\n", clientToInviteName.c_str()[i], clientToInviteName.c_str()[i]);
+        std::string message = ":localhost 401 " + senderClient->_name + " " + channelName  + " :No such nick\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
-    if (!senderClient->currentChannel->isInviteOnly() || senderClient->currentChannel->isOperator(senderClient->_name)) {
+    }
+    std::cout << "channelName: " << channelName << std::endl;
+    if (!senderClient->currentChannel->isInviteOnly() && senderClient->currentChannel->isOperator(senderClient->_name)) {
         if (senderClient->currentChannel->_invited.count(clientToInviteName)) {
             senderClient->currentChannel->_invited.erase(clientToInviteName);
             std::string message = "Your invitation to " + senderClient->currentChannel->_name + " has been canceled.\r\n";
@@ -109,7 +138,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
         }
     }
     else {
-        std::string message = "\nError: You don't have the required rights to execute this command\r\n";
+        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
         send(clientSocket, message.c_str(), message.length(), 0);
     }
 }
@@ -117,7 +146,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
     if (std::strlen(buffer) <= 6) {
-        const char* message = "Please specify a topic or channel\r\n";
+        const char* message = ":localhost 461 :Not enough parameters\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -139,13 +168,13 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         if (isTopic) {
             // check if operator
             if (!_channels[channelName]->isOperator(senderClient->_name)) {
-                const char* message = "You don't have the required rights to execute this command\r\n";
-                send(clientSocket, message, std::strlen(message), 0);
+                std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
+                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                 return;
             }
             if (!_channels[channelName]->_canSetTopic) {
-                const char* message = "You can't set the topic\r\n";
-                send(clientSocket, message, std::strlen(message), 0);
+                std::string message = ":localhost 460 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :Channel topic is locked\r\n";
+                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                 return;
             }
             _channels[channelName]->setTopic(topic);
@@ -159,8 +188,8 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         return;
     }
     else {
-        const char* message = "Channel does not exist\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = ":localhost 403 " + senderClient->_name + " " + channelName + " :No such channel\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
     }
 }
 
@@ -206,12 +235,7 @@ void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::it
     // const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
     send(clientSocket, serverList.c_str(), serverList.length(), 0);
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
-        try {
-            size = it->second->_clients.size();
-        }
-        catch (std::exception &e) {
-            continue;
-        }
+        size = it->second->nbClients;
         send(clientSocket, ":localhost 322 ", 16, 0);
         std::string channelName = it->first;
         send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
@@ -240,7 +264,7 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
  
     std::vector<std::string> tokens = split(buffer + 5, ',');
     if (tokens.empty()) {
-        const char* message = "Please specify a channel name\r\n";
+        const char* message = ":localhost 461 :Not enough parameters\r\n";
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -263,11 +287,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
         std::string buffer2 = buffer;
         std::vector<std::string> tokens = split(clientToKick, ',');
         if (tokens.size() <= 1) {
-            send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-            send(clientSocket, " ", 1, 0);
-            buffer2.erase(buffer2.length() - 1);
-            send(clientSocket, buffer2.c_str(), std::strlen(buffer), 0);
-            const char* message = " :Not enough parameters\n\r";
+            const char* message = ":localhost 461 :Not enough parameters\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
@@ -298,7 +318,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
 
     }
     else {
-        std::string message = "Error: You don't have the required rights to execute this command\r\n";
+        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
         send(clientSocket, message.c_str(), message.length(), 0);
     }
 }
@@ -339,15 +359,15 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         }
     }
     if (it2 == senderClient->_channels.end()) {
-        const char* message = ":localhost 442 :You're not on that channel\r\n";
+        std::string message = ":localhost 442 :You're not on that channel\r\n";
         std::cout << message << std::endl;
-        send(clientSocket, message, std::strlen(message), 0);
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
-        const char* message = ":localhost 482 :You're not a channel operator\r\n";
+        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
         std::cout << message << std::endl;
-        send(clientSocket, message, std::strlen(message), 0);
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     if (!strncmp(mode, "+i", 2)) {
