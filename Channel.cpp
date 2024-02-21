@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 12:28:56 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 13:42:10 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,12 +73,12 @@ void Channel::ClientJoin(Client &client) {
     //if (client.currentChannel)
     //    client.currentChannel->ClientLeft(client);
     if (_limit && _clients.size() >= _limit) {
-        std::string notification = "Channel [" + _name + "] is full !\r\n";
+        std::string notification = ":localhost 471 " + client._name + " " + _name + " :Cannot join channel (+l)\r\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         return;
     }
     if (_isInviteOnly && _invited.find(client._name) == _invited.end()) {
-        std::string notification = "You are not invited to join [" + _name + "] !\r\n";
+        std::string notification = ":localhost 473 " + client._name + " " + _name + " :Cannot join channel (+i)\r\n";
         send((client)._socket, notification.c_str(), notification.length(), 0);
         return;
     }
