@@ -391,7 +391,12 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         senderClient->currentChannel->setInviteOnly(false);
     }
     else if (!strncmp(mode, "+l", 2)) {
-        int limit = std::atoi(mode + 3);
+        if (tokens.size() < 4) {
+            const char* message = ":localhost 461 :Not enough parameters\r\n";
+            send(clientSocket, message, std::strlen(message), 0);
+            return;
+        }
+        int limit = std::atoi(tokens[3].c_str());
         senderClient->currentChannel->setLimit(limit);
     }
     else if (!strncmp(mode, "-l", 2)) {
