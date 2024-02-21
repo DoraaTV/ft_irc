@@ -304,8 +304,29 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
 }
 
 void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    char *mode = buffer + 5;
-    std::string mode2 = buffer + 5;
+    // should be /MODE <channel name> <mode> <client name>
+
+    //get channel
+    std::string channelName = buffer + 6;
+    size_t space_pos = channelName.find(" ");
+    if (space_pos == std::string::npos) {
+        const char* message = "Please specify a channel name\r\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+    channelName = channelName.substr(0, space_pos);
+    if (channelName.find("\n") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
+    if (channelName.find("\r") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
+    if (!_channels[channelName]) {
+        const char* message = "Channel does not exist\r\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+
+    char *mode = buffer + 6 + channelName.length() + 1;
+    std::string mode2 = mode;
     if (mode2.length() <= 2){
         const char* message = "Please specify a mode\r\n";
         send(clientSocket, message, std::strlen(message), 0);
