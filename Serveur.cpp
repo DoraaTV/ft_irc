@@ -44,12 +44,14 @@ void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator s
     (void)buffer;
     (void)senderClient;
     std::string message = "PONG :localhost\r\n";
+    std::cout << "PONG :localhost\r\n" << std::endl;
     send(clientSocket, message.c_str(), message.length(), 0);
 }
 
 void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     if (std::strlen(buffer) <= 7) {
         std::string message = ":localhost 431" + senderClient->_name + ":Please specify a client to find\r\n";
+        std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
         return;
     }
@@ -67,18 +69,22 @@ void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator 
     }
     if (it == _clients.end()) {
         const char* message = ":localhost 401 :No such nick\r\n";
+        std::cout << message << std::endl;
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
     std::string message = ":localhost 311 " + senderClient->_name + " " + it->_name + " localhost 8080\r\n";
+    std::cout << message << std::endl;
     send(clientSocket, message.c_str(), message.length(), 0);
     //list all channels the client is in from his _channels vector
     for (std::vector<Channel *>::iterator it2 = it->_channels.begin(); it2 != it->_channels.end(); ++it2) {
         std::string message = ":localhost 319 " + senderClient->_name + " " + it->_name + " " + (*it2)->_name + "\r\n";
+        std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
     }
     // end of list
     std::string message2 = ":localhost 318 " + senderClient->_name + it->_name + " :End of /WHOIS list\r\n";
+    std::cout << message2 << std::endl;
     send(clientSocket, message2.c_str(), message2.length(), 0);
 }
 
@@ -163,6 +169,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
         const char* message = ":localhost 431 :Please specify a nickname\r\n";
+        std::cout << message << std::endl;
         send(clientSocket, message, std::strlen(message), 0);
         return;
     }
@@ -172,6 +179,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
             std::string message = ":localhost 443 " + newNick + " :Nickname is already in use\r\n";
+            std::cout << message << std::endl;
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
@@ -179,9 +187,11 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     std::string nickname2 = split(newNick, '\n')[0];
     if (senderClient->_name.empty()) {
         std::string welcomeMessage = ":localhost 001 " + nickname2 + ": Welcome to the chat room!\r\n";
+        std::cout << welcomeMessage << std::endl;
         send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
     } else {
         std::string message = ":localhost 001 " + nickname2 + " Your nickname is now " + nickname2 + "\r\n";
+        std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
     }
     senderClient->nickname = nickname2;
