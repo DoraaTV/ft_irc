@@ -36,6 +36,18 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[8].function = &Server::ping;
     _commands[9].name = "WHOIS";
     _commands[9].function = &Server::whois;
+    _commands[10].name = "QUIT";
+    _commands[10].function = &Server::quit;
+}
+
+void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    (void)buffer;
+    std::string message = "QUIT :Leaving\r\n";
+    send(clientSocket, message.c_str(), message.length(), 0);
+    close(clientSocket);
+    _clients.erase(std::remove_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket)), _clients.end());
+    FD_CLR(clientSocket, &_masterSet);
+    std::cout << "Client " << senderClient->_name << " has left the server" << std::endl;
 }
 
 void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -886,7 +898,7 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 int Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 11; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return 0;
