@@ -214,9 +214,19 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     }
     std::string nickname2 = split(newNick, '\n')[0];
     if (senderClient->_name.empty()) {
+        std::string message1 = ":@localhost NICK " + nickname2 + "\r\n";
         std::string welcomeMessage = ":localhost 001 " + nickname2 + " : Welcome to the chat room!\r\n";
-        std::cout << welcomeMessage << std::endl;
         send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
+        send(clientSocket, message1.c_str(), message1.length(), 0);
+        std::string message3 = ":localhost 002 :Your host is 42_Ftirc (localhost), running version 1.1\r\n";
+        send(clientSocket, message3.c_str(), message3.length(), 0);
+        std::string message4 = ":localhost 003 :This server was created 20-02-2024 19:45:17\r\n";
+        send(clientSocket, message4.c_str(), message4.length(), 0);
+        std::string message5 = ":localhost 004 localhost 1.1 io kost k\r\n";
+        send(clientSocket, message5.c_str(), message5.length(), 0);
+        std::string message6 = ":localhost 005 CHANNELLEN=32 NICKLEN=9 TOPICLEN=307 :are supported by this server\r\n";
+        send(clientSocket, message6.c_str(), message6.length(), 0);
+        std::cout << welcomeMessage << std::endl;
     } else {
         std::string message = ":localhost 001 " + nickname2 + " :Your nickname is now " + nickname2 + "\r\n";
         std::cout << message << std::endl;
@@ -791,15 +801,13 @@ void Server::handleExistingConnection(int clientSocket) {
             }
             if (!strncmp(buffer, "NICK", 4)) {
                 changeNick(buffer, clientSocket, it);
-                return;
+                return ;
             }
             if (!strncmp(buffer, "CAP", 3)) {
                 if (it->_name.empty())
                     return ;
-                std::string message1 = ":@localhost NICK syakovle\r\n";
+                std::string message1 = ":@localhost NICK" + it->_name + "\r\n";
                 send(clientSocket, message1.c_str(), message1.length(), 0);
-                std::string message2 = ":localhost 001 :Welcome to the Internet Relay Network :syakovle!syakovle@localhost\r\n";
-                send(clientSocket, message2.c_str(), message2.length(), 0);
                 std::string message3 = ":localhost 002 :Your host is 42_Ftirc (localhost), running version 1.1\r\n";
                 send(clientSocket, message3.c_str(), message3.length(), 0);
                 std::string message4 = ":localhost 003 :This server was created 20-02-2024 19:45:17\r\n";
