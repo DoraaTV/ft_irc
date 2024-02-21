@@ -16,28 +16,26 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     FD_ZERO(&_masterSet);
     FD_SET(_serverSocket, &_masterSet);
     _maxFd = _serverSocket;
-    _commands[0].name = "LIST";
-    _commands[0].function = &Server::showChannels;
-    _commands[1].name = "PRIVMSG";
-    _commands[1].function = &Server::privateMessage;
-    _commands[2].name = "JOIN";
-    _commands[2].function = &Server::joinChannel;
-    _commands[3].name = "PART";
-    _commands[3].function = &Server::leaveChannel;
-    _commands[4].name = "KICK";
-    _commands[4].function = &Server::kickUser;
-    _commands[5].name = "MODE";
-    _commands[5].function = &Server::setMode;
-    _commands[6].name = "NICK";
-    _commands[6].function = &Server::changeNick;
-    _commands[7].name = "TOPIC";
-    _commands[7].function = &Server::changeTopic;
-    _commands[8].name = "INVITE";
-    _commands[8].function = &Server::inviteUser;
-    _commands[9].name = "PING";
-    _commands[9].function = &Server::ping;
-    _commands[10].name = "WHOIS";
-    _commands[10].function = &Server::whois;
+    _commands[0].name = "PRIVMSG";
+    _commands[0].function = &Server::privateMessage;
+    _commands[1].name = "JOIN";
+    _commands[1].function = &Server::joinChannel;
+    _commands[2].name = "PART";
+    _commands[2].function = &Server::leaveChannel;
+    _commands[3].name = "KICK";
+    _commands[3].function = &Server::kickUser;
+    _commands[4].name = "MODE";
+    _commands[4].function = &Server::setMode;
+    _commands[5].name = "NICK";
+    _commands[5].function = &Server::changeNick;
+    _commands[6].name = "TOPIC";
+    _commands[6].function = &Server::changeTopic;
+    _commands[7].name = "INVITE";
+    _commands[7].function = &Server::inviteUser;
+    _commands[8].name = "PING";
+    _commands[8].function = &Server::ping;
+    _commands[9].name = "WHOIS";
+    _commands[9].function = &Server::whois;
 }
 
 void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -225,37 +223,6 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     }
     senderClient->nickname = nickname2;
     senderClient->_name = nickname2;
-}
-
-void Server::showChannels(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    (void)buffer;
-    (void)senderClient;
-    size_t size;
-    std::string serverList = ":localhost 321 " + senderClient->_name + " Channel :Users Name\r\n";
-    // const char* serverList = "Server list, join by using /JOIN <channel name>: \n";
-    send(clientSocket, serverList.c_str(), serverList.length(), 0);
-    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
-        size = it->second->nbClients;
-        send(clientSocket, ":localhost 322 ", 16, 0);
-        std::string channelName = it->first;
-        send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-        send(clientSocket, " ", 1, 0);
-        send(clientSocket, channelName.c_str(), channelName.length(), 0);
-        send(clientSocket, " ", 1, 0);
-        // send(clientSocket, "\r\n", 2, 0);
-        // show users in channel and their topic
-        std::ostringstream oss;
-        oss << size;
-        std::string sizeStr = oss.str();
-        // std::string sizeStr = std::to_string(it->second->_clients.size());
-        send(clientSocket, sizeStr.c_str(), sizeStr.length(), 0);
-        send(clientSocket, " :", 3, 0);
-        send(clientSocket, it->second->getTopic().c_str(), it->second->getTopic().length(), 0);
-        send(clientSocket, "\r\n", 3, 0);
-    }
-    send(clientSocket, ":localhost 323 ", 16, 0);
-    send(clientSocket, senderClient->_name.c_str(), senderClient->_name.length(), 0);
-    send(clientSocket, " :End of /LIST\r\n", 16, 0);
 }
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
@@ -892,7 +859,7 @@ void Server::handleExistingConnection(int clientSocket) {
 }
 
 int Server::handleCommand(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 10; i++) {
         if (!strncmp(buffer, _commands[i].name.c_str(), _commands[i].name.length())) {
             (this->*_commands[i].function)(buffer, clientSocket, senderClient);
             return 0;

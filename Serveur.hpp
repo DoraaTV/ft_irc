@@ -70,7 +70,7 @@ public:
 private:
     int _serverSocket;
     int _port;
-    Command _commands[11];
+    Command _commands[10];
     std::deque<Client> _clients;
     fd_set _masterSet;
     int _maxFd;
