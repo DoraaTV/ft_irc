@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 15:38:06 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 17:25:53 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,14 +84,13 @@ void Channel::ClientJoin(Client &client) {
         return;
     }
     std::cout << "Client joined channel : " << _name << std::endl;
-    std::string message = client._name + " has joined the channel !\r\n";
-    broadcastMessage(message);
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
     std::string notification = ":" + client._name + "@localhost JOIN " + _name + "\r\n";
     std::cout << notification << std::endl;
     send((client)._socket, notification.c_str(), notification.length(), 0);
+    broadcastMessage(notification);
     nbClients++;
 }
 
@@ -129,8 +128,7 @@ void Channel::ClientLeft(Client &client) {
     else
         client.currentChannel = NULL;
     _clients.erase(client._name);
-    std::string message = client._name + " has left the channel !\r\n";
-    broadcastMessage(message);
+    broadcastMessage(notification);
     _operators.erase(client._name);\
     nbClients--;
 }
@@ -166,7 +164,7 @@ void Channel::setLimit(unsigned int limit) {
 void Channel::broadcastMessage(const std::string &message) {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
             std::cout << "Sending message to " << (*it).second->_name << "socket : " << (*it).second->_socket << std::endl;
-            std::string notification = ":localhost PRIVMSG " + _name + " :" + message + "\r\n";
+            std::string notification = message + "\r\n";
             std::cout << notification << std::endl;
             send((*it).second->_socket, notification.c_str(), notification.length(), 0);
     }

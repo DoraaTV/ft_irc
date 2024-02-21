@@ -266,15 +266,35 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
 }
 
 void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    if (senderClient->currentChannel->isOperator(senderClient->_name)) {
-        std::string clientToKick = buffer + 5;
-        std::string buffer2 = buffer;
-        std::vector<std::string> tokens = split(clientToKick, ',');
-        if (tokens.size() <= 1) {
-            const char* message = ":localhost 461 :Not enough parameters\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
-            return;
+
+    // get channelname and set current channel to it
+    std::vector<std::string> tokens3 = split(buffer, ' ');
+    std::cout << "tokens3: size " << tokens3.size() << std::endl;
+    if (tokens3.size() < 3) {
+        const char* message = ":localhost 461 :Not enough parameters\r\n";
+        send(clientSocket, message, std::strlen(message), 0);
+        return;
+    }
+
+    std::string channelName = tokens3[1];
+    //set senderClient the current channel to the channel he wants to kick from
+    std::vector<Channel *>::iterator it2;
+    for (it2 = senderClient->_channels.begin(); it2 != senderClient->_channels.end(); ++it2) {
+        if ((*it2)->_name == channelName) {
+            senderClient->currentChannel = *it2;
+            break;
         }
+    }
+    if (it2 == senderClient->_channels.end()) {
+        std::string message = ":localhost 442 :You're not on that channel\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        return;
+    }
+
+
+    if (senderClient->currentChannel->isOperator(senderClient->_name)) {
+        std::string clientToKick = tokens3[2];
+        std::vector<std::string> tokens = split(clientToKick, ',');
         // if there is \n at the end of the last client name
         if (tokens[tokens.size() - 1].find("\n") != std::string::npos)
             tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
@@ -282,13 +302,18 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
         for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
             std::cout << "Kicking : " << *it << senderClient->currentChannel->_clients.count(*it) << std::endl;
             if (senderClient->currentChannel->_clients.count(*it)) {
+                if (senderClient->_name == *it) {
+                    std::string message = ":localhost 461 :You can't kick yourself\r\n";
+                    send(clientSocket, message.c_str(), message.length(), 0);
+                    return;
+                }
                 Client &client = *(senderClient->currentChannel->_clients[*it]);
-                std::string notification = "You have been kicked from [" + senderClient->currentChannel->_name + "] !\r\n";
+                std::string notification = ":" + *it + " PART " + senderClient->currentChannel->_name + " :You have been kicked from the channel.\r\n";
                 send((client)._socket, notification.c_str(), notification.length(), 0);
                 client.currentChannel = NULL;
                 senderClient->currentChannel->_clients.erase(client._name);
-                std::string message = client._name + " has been kicked from the channel !\r\n";
-                senderClient->currentChannel->broadcastMessage(message);
+                notification = ":" + senderClient->_name + " KICK " + senderClient->currentChannel->_name + " " + *it + " :have been kicked from the channel.\r\n";
+                senderClient->currentChannel->broadcastMessage(notification);
                 senderClient->currentChannel->_operators.erase(client._name);
             }
         }
