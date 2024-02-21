@@ -507,6 +507,15 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
                     return;
                 }
                 _channels[*it]->ClientJoin(*senderClient);
+            } else {
+                // if channel doesnt start with #, add it
+                if (it->c_str()[0] != '#') {
+                    std::string channelName = "#" + *it;
+                    _channels[channelName] = new Channel(*senderClient, channelName);
+                }
+                else {
+                    _channels[*it] = new Channel(*senderClient, *it);
+                }
             }
             if (itPassword != password.end())
                 itPassword++;

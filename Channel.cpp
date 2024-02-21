@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 18:39:43 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 23:20:38 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
     _isInviteOnly = false;
     _isPasswordProtected = false;
     _operators[founder._name] = &founder;
-    _topic = "No topic";
+    _topic = "No topic set for this channel.";
     _canSetTopic = true;
     ClientJoin(founder);
 }
@@ -28,6 +28,8 @@ Channel::~Channel() {
         it->second->currentChannel = NULL;
     std::string message = "Channel " + _name + " has been destroyed !\r\n";
     broadcastMessage(message);
+    std::cout << message << std::endl;
+    _clients.clear();
 }
 
 bool Channel::isOperator(const std::string &clientName) {
