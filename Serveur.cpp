@@ -186,11 +186,11 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     }
     std::string nickname2 = split(newNick, '\n')[0];
     if (senderClient->_name.empty()) {
-        std::string welcomeMessage = ":localhost 001 " + nickname2 + ": Welcome to the chat room!\r\n";
+        std::string welcomeMessage = ":localhost 001 " + nickname2 + " : Welcome to the chat room!\r\n";
         std::cout << welcomeMessage << std::endl;
         send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
     } else {
-        std::string message = ":localhost 001 " + nickname2 + " Your nickname is now " + nickname2 + "\r\n";
+        std::string message = ":localhost 001 " + nickname2 + " :Your nickname is now " + nickname2 + "\r\n";
         std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
     }
