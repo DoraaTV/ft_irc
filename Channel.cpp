@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 17:51:19 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 18:12:29 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,12 @@ Channel::~Channel() {
 }
 
 bool Channel::isOperator(const std::string &clientName) {
-    return _operators.count(clientName);
+    for (std::map<std::string, Client*>::iterator it = _operators.begin(); it != _operators.end(); ++it) {
+        if (it->first == clientName) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Channel::setModeTopic(bool mode) {
@@ -98,19 +103,16 @@ void Channel::ClientJoin(Client &client) {
 }
 
 void Channel::addOperator(std::string &clientName) {
-    //remove last char from clientName that is \n
-    clientName = clientName.substr(0, clientName.size() - 1);
-    std::cout << "Trying to add operator : " << clientName << " to channel " << _name << std::endl;
-    std::cout << "Client : " << _clients[clientName]->currentChannel << std::endl;
-    if (_clients[clientName]) {
-        std::cout << "Adding operator : " << clientName << " to channel " << _name << std::endl;
-        _operators[clientName] = _clients[clientName];
-    }
+    
+    if (clientName.find("\n") != std::string::npos)
+        clientName = clientName.substr(0, clientName.size() - 1);
+    if (clientName.find("\r") != std::string::npos)
+        clientName = clientName.substr(0, clientName.size() - 1);
+        
+    _operators[clientName] = _clients[clientName];
 
-    //show all op for debug
-    for (std::map<std::string, Client*>::iterator it = _operators.begin(); it != _operators.end(); ++it) {
-        std::cout << "Operator : " << (*it).second->_name << std::endl;
-    }
+    // debug message
+    std::cout << "Operator added to channel " << _name << " : " << clientName << std::endl;
 }
 
 void Channel::removeOperator(std::string &clientName) {

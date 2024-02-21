@@ -378,7 +378,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
-    else if (!senderClient->currentChannel->_operators[senderClient->_name]) {
+    else if (!senderClient->currentChannel->isOperator(senderClient->_name)) {
         std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
         std::cout << message << std::endl;
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -403,21 +403,21 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         senderClient->currentChannel->setLimit(0);
     }
     else if (!strncmp(mode, "+o", 2)) {
-        if (std::strlen(mode) <= 3) {
+        if (tokens.size() < 4) {
             const char* message = ":localhost 461 :Not enough parameters\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
-        std::string clientToOp = mode + 3;
+        std::string clientToOp = tokens[3];
         senderClient->currentChannel->addOperator(clientToOp);
     }
     else if (!strncmp(mode, "-o", 2)) {
-        if (std::strlen(mode) <= 3) {
+        if (tokens.size() < 4) {
             const char* message = ":localhost 461 :Not enough parameters\r\n";
             send(clientSocket, message, std::strlen(message), 0);
             return;
         }
-        std::string clientToDeop = mode + 3;
+        std::string clientToDeop = tokens[3];
         senderClient->currentChannel->removeOperator(clientToDeop);
     }
     else if (!strncmp(mode, "+k", 2)) {
