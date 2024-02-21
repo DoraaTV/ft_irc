@@ -530,7 +530,14 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
             else {
                 for (size_t i = 0; i < std::strlen(it->c_str()); i++)
                     printf("name %d %c\n", it->c_str()[i], it->c_str()[i]);
-                _channels[*it] = new Channel(*senderClient, *it);
+                // if channel doesnt start with #, add it
+                if (it->c_str()[0] != '#') {
+                    std::string channelName = "#" + *it;
+                    _channels[channelName] = new Channel(*senderClient, channelName);
+                }
+                else {
+                    _channels[*it] = new Channel(*senderClient, *it);
+                }
             }
         }
     }
