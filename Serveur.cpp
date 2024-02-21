@@ -545,7 +545,7 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
         std::string textToSend = command.substr(command.find(" ") + 1);
         if (_channels.find(channelName) != _channels.end()) {
             if (_channels[channelName]->_clients.count(senderClient->_name)) {
-                _channels[channelName]->sendMessage(senderClient->_name + ": " + textToSend, *senderClient);
+                _channels[channelName]->sendMessage(textToSend, *senderClient);
             }
             else {
                 const char* message = "You are not in this channel\n";
@@ -771,10 +771,43 @@ void Server::handleExistingConnection(int clientSocket) {
                 send(clientSocket, message6.c_str(), message6.length(), 0);
                 return;
             }
-            if (!strncmp(buffer, "NICK", 4)) {
-                changeNick(buffer, clientSocket, it);
-                return;
+            // find in buffer NICK that can be after the first 4 char and change the nickname with the name after NICK
+            if (buffer[0] != '\0' && buffer[0] != '\n' && buffer[0] != '\r') {
+                std::string newNick = buffer + 5;
+                if (newNick.length() <= 1) {
+                    const char* message = ":localhost 431 :Please specify a nickname\r\n";
+                    std::cout << message << std::endl;
+                    send(clientSocket, message, std::strlen(message), 0);
+                    return;
+                }
+                newNick.erase(newNick.length() - 1);
+                if (newNick[newNick.length() - 1] == '\r')
+                    newNick.erase(newNick.length() - 1);
+                for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+                    if (it->_name == newNick) {
+                        std::string message = ":localhost 443 " + newNick + " :Nickname is already in use\r\n";
+                        std::cout << message << std::endl;
+                        send(clientSocket, message.c_str(), message.length(), 0);
+                        return;
+                    }
+                }
+                std::string nickname2 = split(newNick, '\n')[0];
+                if (it->_name.empty()) {
+                    std::string welcomeMessage = ":localhost 001 " + nickname2 + " : Welcome to the chat room!\r\n";
+                    std::cout << welcomeMessage << std::endl;
+                    send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
+                } else {
+                    std::string message = ":localhost 001 " + nickname2 + " :Your nickname is now " + nickname2 + "\r\n";
+                    std::cout << message << std::endl;
+                    send(clientSocket, message.c_str(), message.length(), 0);
+                }
+                it->nickname = nickname2;
+                it->_name = nickname2;
             }
+            // if (!strncmp(buffer, "NICK", 4)) {
+            //     changeNick(buffer, clientSocket, it);
+            //     return;
+            // }
             std::string welcomeMessage = "Error: Please use NICK to choose your nickname\r\n";
             send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0);
             // std::cout << std::endl;
