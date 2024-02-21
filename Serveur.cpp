@@ -192,7 +192,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
 }
 
 void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    
+
     std::cout << senderClient->_name << std::endl;
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
@@ -438,21 +438,24 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
     }
     std::vector<std::string> tokens2 = split(tokens[1], ',');
     if (tokens.size() == 3) {
-        std::string password = tokens[2];
-        //if there is \n at the end of the password
-        if (password.find("\n") != std::string::npos)
-            password.erase(password.length() - 1);
-        if (password.find("\r") != std::string::npos)
-            password.erase(password.length() - 1);
+        std::vector<std::string> password = split(tokens[2], ',');
+        //if there is \n at the end of the last password
+        if (password[password.size() - 1].find("\n") != std::string::npos)
+            password[password.size() - 1].erase(password[password.size() - 1].length() - 1);
+        if (password[password.size() - 1].find("\r") != std::string::npos)
+            password[password.size() - 1].erase(password[password.size() - 1].length() - 1);
+        std::vector<std::string>::iterator itPassword = password.begin();
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
             if (_channels[*it]) {
-                if (_channels[*it]->_isPasswordProtected && _channels[*it]->_password != password) {
+                if (_channels[*it]->_isPasswordProtected && (itPassword != password.end() && _channels[*it]->_password == *itPassword)) {
                     std::string message = ":localhost 475 " + senderClient->_name + " " + *it + " :Wrong password\r\n";
                     send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                     return;
                 }
                 _channels[*it]->ClientJoin(*senderClient);
             }
+            if (itPassword != password.end())
+                itPassword++;
         }
     }
     else {
