@@ -206,7 +206,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
-            std::string message = ":localhost 443 " + newNick + " :Nickname is already in use\r\n";
+            std::string message = ":localhost 433 " + newNick + " :Nickname is already in use\r\n";
             std::cout << message << std::endl;
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
@@ -829,7 +829,7 @@ void Server::handleExistingConnection(int clientSocket) {
                     //le client est dans un channel
                 if (senderClient->currentChannel)
                 {
-                    std::string message = "\n(" + senderClient->currentChannel->_name + ") "+ senderClient->_name + ": " + buffer + "\r\n";
+                    std::string message = buffer;
                     senderClient->currentChannel->sendMessage(message, *senderClient);
                 }
                 //broadcastMessage(clientSocket, message);
