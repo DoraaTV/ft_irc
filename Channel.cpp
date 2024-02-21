@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 18:20:49 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 18:34:01 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,8 @@ void Channel::ClientJoin(Client &client) {
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
+    if (_operators.size() == 0)
+        addOperator(client._name);
     std::string notification = ":" + client._name + "@localhost JOIN " + _name + "\r\n";
     std::cout << notification << std::endl;
     broadcastMessage(notification);
@@ -132,9 +134,9 @@ void Channel::ClientLeft(Client &client) {
         client.currentChannel = client._channels.back();
     else
         client.currentChannel = NULL;
+    _operators.erase(client._name);
     _clients.erase(client._name);
     broadcastMessage(notification);
-    _operators.erase(client._name);\
     nbClients--;
 }
 
