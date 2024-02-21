@@ -206,7 +206,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
-            std::string message = ":localhost 433 " + newNick + " :Nickname is already in use\r\n";
+            std::string message = ":localhost 433 * " + newNick + " :Nickname is already taken\r\n";
             std::cout << message << std::endl;
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
@@ -789,8 +789,13 @@ void Server::handleExistingConnection(int clientSocket) {
                     break;
                 }
             }
-            // if name start by CAP
+            if (!strncmp(buffer, "NICK", 4)) {
+                changeNick(buffer, clientSocket, it);
+                return;
+            }
             if (!strncmp(buffer, "CAP", 3)) {
+                if (it->_name.empty())
+                    return ;
                 std::string message1 = ":@localhost NICK syakovle\r\n";
                 send(clientSocket, message1.c_str(), message1.length(), 0);
                 std::string message2 = ":localhost 001 :Welcome to the Internet Relay Network :syakovle!syakovle@localhost\r\n";
@@ -803,10 +808,6 @@ void Server::handleExistingConnection(int clientSocket) {
                 send(clientSocket, message5.c_str(), message5.length(), 0);
                 std::string message6 = ":localhost 005 CHANNELLEN=32 NICKLEN=9 TOPICLEN=307 :are supported by this server\r\n";
                 send(clientSocket, message6.c_str(), message6.length(), 0);
-                return;
-            }
-            if (!strncmp(buffer, "NICK", 4)) {
-                changeNick(buffer, clientSocket, it);
                 return;
             }
             std::string notRegistered = ":localhost 451 :You have not registered\r\n";
