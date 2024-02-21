@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 14:35:42 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/21 15:38:06 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,10 @@ void Channel::removeOperator(std::string &clientName) {
 }
 
 void Channel::ClientLeft(Client &client) {
+    
+    // check if client is in channel
+    if (_clients.find(client._name) == _clients.end())
+        return;
     std::string notification = ":" + client._name + "@localhost PART " + _name + "\r\n";
     std::cout << notification << std::endl;
     send((client)._socket, notification.c_str(), notification.length(), 0);
