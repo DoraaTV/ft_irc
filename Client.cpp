@@ -8,5 +8,5 @@ Client::Client(int _socket, const std::string& _name) : _socket(_socket), _name(
 Client::~Client() {
     // for (std::vector<Channel *>::iterator it = _channels.begin(); it != _channels.end(); ++it)
     //     this->currentChannel->ClientLeft(*this);
-    std::cout << "Client " << _name << " has been destroyed !" << std::endl;
+    return ;
 }

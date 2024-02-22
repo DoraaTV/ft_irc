@@ -6,7 +6,7 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/22 12:29:16 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/22 15:52:13 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ class Channel {
         void setInviteOnly(bool inviteOnly);
         void ClientJoin(Client &client);
         void ClientLeft(Client &client);
-        void ClientKick(std::string &clientToKick);
         void sendMessage(const std::string &message, Client &sender);
 
         void setPasswd(std::string &passwd);
