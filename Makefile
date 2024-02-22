@@ -1,15 +1,21 @@
-SRC = main.cpp
-FILES = Serveur.cpp \
+SRC = 	main.cpp \
+		Serveur.cpp \
 		Client.cpp \
 		Channel.cpp \
 		utils.cpp \
+		$(wildcard Commands/*.cpp) \
 
-OBJ = $(SRC:.cpp=.o) $(FILES:.cpp=.o)
+OBJ = $(addprefix OBJ/,$(SRC:.cpp=.o))
+
 CXX = c++
-RM = rm -f
+RM = rm -rf
 CXXFLAGS = -Wall -Wextra -Werror -g3 -std=c++98
 
 NAME = ircserv
+
+OBJ/%.o: %.cpp
+	@mkdir -p OBJ/Commands
+	${CXX} ${CXXFLAGS} -c $< -o $@
 
 all: $(NAME)
 
@@ -17,7 +23,7 @@ $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 clean:
-	$(RM) $(OBJ)
+	$(RM) OBJ/
 
 fclean: clean
 	$(RM) $(NAME)
