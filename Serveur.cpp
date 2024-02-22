@@ -227,7 +227,8 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
-    newNick.erase(newNick.length() - 1);
+    if (newNick[newNick.length() - 1] == '\n')
+        newNick.erase(newNick.length() - 1);
     if (newNick[newNick.length() - 1] == '\r')
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
@@ -373,7 +374,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     if (channelName.find("\r") != std::string::npos)
         channelName.erase(channelName.length() - 1);
     if (!_channels[channelName]) {
-        std::string message = "localhost 403 :No such channel\r\n";
+        std::string message = ":localhost 403 :No such channel\r\n";
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
@@ -381,7 +382,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     const char *mode = mode2.c_str();
     std::cout << "mode: " << mode << std::endl;
     if (mode2.length() < 2){
-        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
         std::cout << message << std::endl;
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
