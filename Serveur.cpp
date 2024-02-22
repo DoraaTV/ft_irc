@@ -272,7 +272,6 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
-
     std::vector<std::string> tokens = split(tokens2[1], ',');
     if (tokens.empty()) {
         std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
@@ -286,8 +285,17 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
     if (tokens[tokens.size() - 1].find("\r") != std::string::npos)
         tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
-        if (_channels[*it]) {
-            _channels[*it]->ClientLeft(*senderClient);
+        std::string channelName;
+        if (it->c_str()[0] != '#')
+            channelName = "#" + *it;
+        else
+            channelName = *it;
+        if (_channels[channelName]) {
+            _channels[channelName]->ClientLeft(*senderClient);
+        }
+        else {
+            std::string message = ":localhost 403 " + senderClient->_name + " " + channelName + " :No such channel\r\n";
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         }
     }
 }
@@ -503,23 +511,20 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
             password[password.size() - 1].erase(password[password.size() - 1].length() - 1);
         std::vector<std::string>::iterator itPassword = password.begin();
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
-            if (_channels[*it]) {
-                if (_channels[*it]->_isPasswordProtected && (itPassword != password.end() && _channels[*it]->_password != *itPassword)) {
-                    std::string message = ":localhost 475 " + senderClient->_name + " " + *it + " :Wrong password\r\n";
+            std::string channelName;
+            if (it->c_str()[0] != '#')
+                channelName = "#" + *it;
+            else 
+                channelName = *it;
+            if (_channels[channelName]) {
+                if (_channels[channelName]->_isPasswordProtected && (itPassword != password.end() && _channels[channelName]->_password != *itPassword)) {
+                    std::string message = ":localhost 475 " + senderClient->_name + " " + channelName + " :Wrong password\r\n";
                     send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                     return;
                 }
-                _channels[*it]->ClientJoin(*senderClient);
-            } else {
-                // if channel doesnt start with #, add it
-                if (it->c_str()[0] != '#') {
-                    std::string channelName = "#" + *it;
-                    _channels[channelName] = new Channel(*senderClient, channelName);
-                }
-                else {
-                    _channels[*it] = new Channel(*senderClient, *it);
-                }
-            }
+                _channels[channelName]->ClientJoin(*senderClient);
+            } else
+                _channels[channelName] = new Channel(*senderClient, channelName);
             if (itPassword != password.end())
                 itPassword++;
         }
@@ -531,25 +536,23 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         if (tokens2[tokens2.size() - 1].find("\r") != std::string::npos)
             tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
-            if (_channels[*it]) {
-                if (_channels[*it]->_isPasswordProtected) {
-                    std::string message = ":localhost 475 " + senderClient->_name + " " + *it + " :Password required\r\n";
+            std::string channelName;
+            if (it->c_str()[0] != '#')
+                channelName = "#" + *it;
+            else
+                channelName = *it;
+            if (_channels[channelName]) {
+                if (_channels[channelName]->_isPasswordProtected) {
+                    std::string message = ":localhost 475 " + senderClient->_name + " " + channelName + " :Password required\r\n";
                     send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                     return;
                 }
-                _channels[*it]->ClientJoin(*senderClient);
+                _channels[channelName]->ClientJoin(*senderClient);
             }
             else {
                 for (size_t i = 0; i < std::strlen(it->c_str()); i++)
                     printf("name %d %c\n", it->c_str()[i], it->c_str()[i]);
-                // if channel doesnt start with #, add it
-                if (it->c_str()[0] != '#') {
-                    std::string channelName = "#" + *it;
-                    _channels[channelName] = new Channel(*senderClient, channelName);
-                }
-                else {
-                    _channels[*it] = new Channel(*senderClient, *it);
-                }
+                _channels[channelName] = new Channel(*senderClient, channelName);
             }
         }
     }
