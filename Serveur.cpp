@@ -2,6 +2,7 @@
 #include "Channel.hpp"
 #include <string>
 #include <stdio.h>
+#include <signal.h>
 
 struct ClientFinder {
     int socketToFind;
@@ -40,9 +41,24 @@ Server::Server(int _port) : _port(_port), _maxFd(0) {
     _commands[10].function = &Server::quit;
 }
 
-void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    (void)buffer;
+Server::~Server()
+{
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    {
+        if (it->second)
+        {
+            delete (it->second);
+        }
+    }
+    for (std::deque<Client>::iterator it2 = _clients.begin(); it2 != _clients.end(); it2++)
+    {
+        close(it2->_socket);
+        FD_CLR(it2->_socket, &_masterSet);
+    }
+}
 
+void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    static_cast<void>(buffer);
     // leaves all channels he is in using broadcastMessage to send a message to all clients in the channel
     for (std::vector<Channel *>::iterator it = senderClient->_channels.begin(); it != senderClient->_channels.end(); ++it) {
         std::string message = ":" + senderClient->_name + " PART " + (*it)->_name + " :Leaving\r\n";
@@ -64,8 +80,8 @@ void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator s
 
 void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
-    (void)buffer;
-    (void)senderClient;
+    static_cast<void>(buffer);
+    static_cast<void>(senderClient);
     std::string message = "PONG :localhost\r\n";
     std::cout << "PONG :localhost\r\n" << std::endl;
     send(clientSocket, message.c_str(), message.length(), 0);
@@ -537,7 +553,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
 }
 
 void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    (void)clientSocket;
+    static_cast<void>(clientSocket);
     std::string command = buffer + 8;
     if (command[0] == '#') {
         std::string channelName = command.substr(0, command.find(" "));
@@ -571,19 +587,35 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
     }
 }
 
+int loop = true;
+
+void handler(int sig, siginfo_t *info, void *ptr1)
+{
+    static_cast<void>(sig);
+    static_cast<void>(info);
+    static_cast<void>(ptr1);
+    loop = false;
+}
+
 void Server::start() {
     std::cout << "Server listening on port " << _port << "..." << std::endl;
 
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 1;
-    while (true) {
+    struct sigaction	sa;
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_sigaction = &handler;
+    sigaction(SIGINT, &sa, 0);
+    while (loop) {
         fd_set readSet = _masterSet;
 
         int result = select(_maxFd + 1, &readSet, NULL, NULL, &timeout);
         if (result == -1) {
             std::cerr << "Error in select" << std::endl;
-            exit(1);
+            break;
         }
         for (int i = 0; i <= _maxFd; ++i) {
             if (FD_ISSET(i, &readSet)) {
@@ -601,7 +633,7 @@ int Server::createSocket() {
     int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
     if (socketDescriptor == -1) {
         std::cerr << "Error creating socket" << std::endl;
-        exit(1);
+        return (-1);
     }
 
     //option_value = 1 pour activer l'option SO_REUSEADDR (permet de relancer le serveur + rapidement sur une même addresse)
@@ -610,12 +642,12 @@ int Server::createSocket() {
     if (setsockopt(socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &option_value, optlen) == -1) {
         std::cout << "error: setsockopt" << std::endl;
         close(socketDescriptor);
-        exit(EXIT_FAILURE);
+        return (-1);
     }
     return socketDescriptor;
 }
 
-void Server::bindSocket() {
+int Server::bindSocket() {
     //creation du serveur avec le _port
     sockaddr_in serverAddress;
     //memset(&serverAddress, 0, sizeof(serverAddress)) aurait été bien mais on a pas le droit
@@ -625,7 +657,7 @@ void Server::bindSocket() {
 
     if (bind(_serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)) == -1) {
         std::cerr << "Error binding socket to address" << std::endl;
-        exit(1);
+        return (-1);
     }
 
     struct protoent *proto;
@@ -633,7 +665,7 @@ void Server::bindSocket() {
     proto = getprotobyname("tcp");
     if (proto == NULL) {
         std::cout << "error: getprotobyname" << std::endl;
-        exit(1);
+        return (-1);
     }
 
     // Affichage des informations sur le protocole TCP
@@ -645,7 +677,7 @@ void Server::bindSocket() {
     if (getsockname(_serverSocket, reinterpret_cast<struct sockaddr *>(&serverAddress), &addr_len) == -1) {
         std::cout << "error: getsockname" << std::endl;
         close(_serverSocket);
-        exit(1);
+        return (-1);
     }
     std::cout << "Local ip address: " << inet_ntoa(serverAddress.sin_addr) << std::endl;
     std::cout << "Port: " << ntohs(serverAddress.sin_port) << std::endl;
@@ -659,7 +691,7 @@ void Server::bindSocket() {
     if (host == NULL) {
         std::cout << "error: gethostbyname" << std::endl;
         close(_serverSocket);
-        exit(1);
+        return (-1);
     }
     // Affichage des informations sur l'hôte
     std::cout << "Nom de l'hôte: " << host->h_name << std::endl;
@@ -679,14 +711,15 @@ void Server::bindSocket() {
     //     exit(1);
     // }
 
-
+    return (0);
 }
 
-void Server::listenForConnections() {
+int Server::listenForConnections() {
     if (listen(_serverSocket, BACKLOG) == -1) {
         std::cerr << "Error listening on socket" << std::endl;
-        exit(1);
+        return (-1);
     }
+    return (0);
 }
 
 // Client se connecte
@@ -750,51 +783,56 @@ void Server::handleExistingConnection(int clientSocket) {
 
         std::cout << "Received from socket " << clientSocket << ": " << buffer << std::endl;
         //choisir un nom à la connexion
-        if (it != _clients.end() && it->_name.empty() && buffer[0] != '\0') //le parsing devra check si le name est valid !!!!
+        std::string commandlist = buffer;
+        std::vector<std::string> commands = split(commandlist, '\n');
+        for (std::vector<std::string>::iterator commandit = commands.begin(); commandit != commands.end(); commandit++)
         {
-            for (int i = 0; buffer[i]; i++)
+            if (it != _clients.end() && it->_name.empty() && buffer[0] != '\0') //le parsing devra check si le name est valid !!!!
             {
-                if (buffer[i] == '\n')
-                {
-                    buffer[i] = 0;
-                    break;
+                // for (int i = 0; buffer[i]; i++)
+                // {
+                //     if (buffer[i] == '\n')
+                //     {
+                //         buffer[i] = 0;
+                //         break;
+                //     }
+                // }
+                if (!strncmp(commandit->c_str(), "NICK", 4)) {
+                    changeNick(const_cast<char*>(commandit->c_str()), clientSocket, it);
+                    continue ;
                 }
+                if (!strncmp(commandit->c_str(), "CAP", 3)) {
+                    if (it->_name.empty())
+                        continue ;
+                    std::string message1 = ":@localhost NICK" + it->_name + "\r\n";
+                    send(clientSocket, message1.c_str(), message1.length(), 0);
+                    std::string message3 = ":localhost 002 :Your host is 42_Ftirc (localhost), running version 1.1\r\n";
+                    send(clientSocket, message3.c_str(), message3.length(), 0);
+                    std::string message4 = ":localhost 003 :This server was created 20-02-2024 19:45:17\r\n";
+                    send(clientSocket, message4.c_str(), message4.length(), 0);
+                    std::string message5 = ":localhost 004 localhost 1.1 io kost k\r\n";
+                    send(clientSocket, message5.c_str(), message5.length(), 0);
+                    std::string message6 = ":localhost 005 CHANNELLEN=32 NICKLEN=9 TOPICLEN=307 :are supported by this server\r\n";
+                    send(clientSocket, message6.c_str(), message6.length(), 0);
+                    continue;
+                }
+                std::string notRegistered = ":localhost 451 :You have not registered\r\n";
+                send(clientSocket, notRegistered.c_str(), notRegistered.length(), 0);
             }
-            if (!strncmp(buffer, "NICK", 4)) {
-                changeNick(buffer, clientSocket, it);
-                return ;
-            }
-            if (!strncmp(buffer, "CAP", 3)) {
-                if (it->_name.empty())
-                    return ;
-                std::string message1 = ":@localhost NICK" + it->_name + "\r\n";
-                send(clientSocket, message1.c_str(), message1.length(), 0);
-                std::string message3 = ":localhost 002 :Your host is 42_Ftirc (localhost), running version 1.1\r\n";
-                send(clientSocket, message3.c_str(), message3.length(), 0);
-                std::string message4 = ":localhost 003 :This server was created 20-02-2024 19:45:17\r\n";
-                send(clientSocket, message4.c_str(), message4.length(), 0);
-                std::string message5 = ":localhost 004 localhost 1.1 io kost k\r\n";
-                send(clientSocket, message5.c_str(), message5.length(), 0);
-                std::string message6 = ":localhost 005 CHANNELLEN=32 NICKLEN=9 TOPICLEN=307 :are supported by this server\r\n";
-                send(clientSocket, message6.c_str(), message6.length(), 0);
-                return;
-            }
-            std::string notRegistered = ":localhost 451 :You have not registered\r\n";
-            send(clientSocket, notRegistered.c_str(), notRegistered.length(), 0);
-        }
-        //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
-        else
-        {
-            std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
-            if (senderClient != _clients.end() && !senderClient->_name.empty()) {
-                //commande
-                if (handleCommand(buffer, clientSocket, senderClient) == 0)
-                    return;
-                //message
-                if (senderClient->currentChannel)
-                {
-                    std::string message = buffer;
-                    senderClient->currentChannel->sendMessage(message, *senderClient);
+            //il s'agit d'un message ou d'une commande, agir en conséquence (ici il n'y a que pour un message)
+            else
+            {
+                std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+                if (senderClient != _clients.end() && !senderClient->_name.empty()) {
+                    //commande
+                    if (handleCommand(const_cast<char *>(commandit->c_str()), clientSocket, senderClient) == 0)
+                        continue;
+                    //message
+                    if (senderClient->currentChannel)
+                    {
+                        std::string message = commandit->c_str();
+                        senderClient->currentChannel->sendMessage(message, *senderClient);
+                    }
                 }
             }
         }

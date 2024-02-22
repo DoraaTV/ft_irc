@@ -45,9 +45,10 @@ struct Command {
 class Server {
 public:
     Server(int _port);
+    ~Server();
     void start();
-    void bindSocket();
-    void listenForConnections();
+    int bindSocket();
+    int listenForConnections();
     int createSocket();
     void handleNewConnection(int _serverSocket);
     void handleExistingConnection(int clientSocket);
@@ -65,6 +66,7 @@ public:
     void whois(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
+    int getSocket(){return _serverSocket;};
 
 
 private:

@@ -14,9 +14,12 @@ int main(int ac, char **av) {
         return (1);
     }
     Server server(port);
-    server.bindSocket();
-    server.listenForConnections();
+    if (server.bindSocket() == -1 ||
+        server.listenForConnections() == -1)
+    {
+        return (1);
+    }
     server.start();
-
+    close(server.getSocket());
     return 0;
 }

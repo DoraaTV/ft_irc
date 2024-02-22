@@ -7,7 +7,7 @@ FILES = Serveur.cpp \
 OBJ = $(SRC:.cpp=.o) $(FILES:.cpp=.o)
 CXX = c++
 RM = rm -f
-CXXFLAGS = -Wall -Wextra -Werror -g3 -std=c++98 -fsanitize=address
+CXXFLAGS = -Wall -Wextra -Werror -g3 -std=c++98
 
 NAME = ircserv
 
