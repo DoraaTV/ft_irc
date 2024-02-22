@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/21 23:20:38 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/22 12:29:16 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
     _isPasswordProtected = false;
     _operators[founder._name] = &founder;
     _topic = "No topic set for this channel.";
-    _canSetTopic = true;
+    _isTopicRestricted = true;
     ClientJoin(founder);
 }
 
@@ -42,7 +42,7 @@ bool Channel::isOperator(const std::string &clientName) {
 }
 
 void Channel::setModeTopic(bool mode) {
-    _canSetTopic = mode;
+    _isTopicRestricted = mode;
 }
 
 void Channel::setTopic(std::string &topic) {

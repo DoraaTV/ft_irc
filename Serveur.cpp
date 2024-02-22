@@ -46,8 +46,14 @@ void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator s
     // leaves all channels he is in using broadcastMessage to send a message to all clients in the channel
     for (std::vector<Channel *>::iterator it = senderClient->_channels.begin(); it != senderClient->_channels.end(); ++it) {
         std::string message = ":" + senderClient->_name + " PART " + (*it)->_name + " :Leaving\r\n";
-        (*it)->broadcastMessage(message);
         // (*it)->ClientLeft(*senderClient);
+        (*it)->_clients.erase(senderClient->_name);
+        (*it)->_operators.erase(senderClient->_name);
+        if ((*it)->_operators.size() == 0 && (*it)->_clients.size() > 0) {
+            std::string name2 = (*it)->_clients.begin()->first;
+            (*it)->addOperator(name2);
+        }
+        (*it)->broadcastMessage(message);
     }
     std::string message = "QUIT :Leaving\r\n";
     send(clientSocket, message.c_str(), message.length(), 0);
@@ -85,9 +91,9 @@ void Server::whois(char *buffer, int clientSocket, std::deque<Client>::iterator 
             break ;
     }
     if (it == _clients.end()) {
-        const char* message = ":localhost 401 :No such nick\r\n";
+        std::string message = "localhost 401 :No such nick\r\n";
         std::cout << message << std::endl;
-        send(clientSocket, message, std::strlen(message), 0);
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::string message = ":localhost 311 " + senderClient->_name + " " + it->_name + " localhost 8080\r\n";
@@ -113,8 +119,8 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
     std::cout << "channelName1: " << channelName << std::endl;
     std::vector<std::string> tokens = split(channelName, ' ');
     if (tokens.size() < 2) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     clientToInviteName = tokens[0];
@@ -143,7 +149,12 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
         return;
     }
     std::cout << "channelName: " << channelName << std::endl;
-    if (!senderClient->currentChannel->isInviteOnly() && senderClient->currentChannel->isOperator(senderClient->_name)) {
+    if (senderClient->currentChannel->isInviteOnly() && !senderClient->currentChannel->isOperator(senderClient->_name))
+    {
+        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
+        send(clientSocket, message.c_str(), message.length(), 0);
+    }
+    else {
         if (senderClient->currentChannel->_invited.count(clientToInviteName)) {
             senderClient->currentChannel->_invited.erase(clientToInviteName);
             std::string message = "Your invitation to " + senderClient->currentChannel->_name + " has been canceled.\r\n";
@@ -154,17 +165,13 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
             send(it->_socket, message.c_str(), message.length(), 0);
         }
     }
-    else {
-        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
-        send(clientSocket, message.c_str(), message.length(), 0);
-    }
 }
 
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
     if (std::strlen(buffer) <= 6) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::string topic;
@@ -184,13 +191,8 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         // check if there is argument after the channel name (topic name)
         if (isTopic) {
             // check if operator
-            if (!_channels[channelName]->isOperator(senderClient->_name)) {
-                std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
-                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
-                return;
-            }
-            if (!_channels[channelName]->_canSetTopic) {
-                std::string message = ":localhost 460 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :Channel topic is locked\r\n";
+            if (_channels[channelName]->_isTopicRestricted && !_channels[channelName]->isOperator(senderClient->_name)) {
+                std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a allowed to change the topic\r\n";
                 send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                 return;
             }
@@ -220,9 +222,9 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     std::cout << senderClient->_name << std::endl;
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
-        const char* message = ":localhost 431 :Please specify a nickname\r\n";
+        std::string message = "localhost 431 :Please specify a nickname\r\n";
         std::cout << message << std::endl;
-        send(clientSocket, message, std::strlen(message), 0);
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     newNick.erase(newNick.length() - 1);
@@ -265,15 +267,15 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
     // should be /PART <channel name>,<channel name>,etc
     std::vector<std::string> tokens2 = split(buffer, ' ');
     if (tokens2.size() < 2) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
 
     std::vector<std::string> tokens = split(tokens2[1], ',');
     if (tokens.empty()) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::string channelNames = tokens[0];
@@ -295,8 +297,8 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
     std::vector<std::string> tokens3 = split(buffer, ' ');
     std::cout << "tokens3: size " << tokens3.size() << std::endl;
     if (tokens3.size() < 3) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
 
@@ -327,7 +329,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
             std::cout << "Kicking : " << *it << senderClient->currentChannel->_clients.count(*it) << std::endl;
             if (senderClient->currentChannel->_clients.count(*it)) {
                 if (senderClient->_name == *it) {
-                    std::string message = ":localhost 461 :You can't kick yourself\r\n";
+                    std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + ":You can't kick yourself\r\n";
                     send(clientSocket, message.c_str(), message.length(), 0);
                     return;
                 }
@@ -361,8 +363,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
 
     std::vector <std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 3) {
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::string channelName = tokens[1];
@@ -371,17 +373,17 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     if (channelName.find("\r") != std::string::npos)
         channelName.erase(channelName.length() - 1);
     if (!_channels[channelName]) {
-        const char* message = ":localhost 403 :No such channel\r\n";
-        send(clientSocket, message, std::strlen(message), 0);
+        std::string message = "localhost 403 :No such channel\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::string mode2 = tokens[2];
     const char *mode = mode2.c_str();
     std::cout << "mode: " << mode << std::endl;
     if (mode2.length() < 2){
-        const char* message = ":localhost 461 :Not enough parameters\r\n";
+        std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
         std::cout << message << std::endl;
-        send(clientSocket, message, std::strlen(message), 0);
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
     std::vector<Channel *>::iterator it2;
@@ -411,8 +413,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "+l", 2)) {
         if (tokens.size() < 4) {
-            const char* message = ":localhost 461 :Not enough parameters\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
+            std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             return;
         }
         int limit = std::atoi(tokens[3].c_str());
@@ -423,8 +425,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "+o", 2)) {
         if (tokens.size() < 4) {
-            const char* message = ":localhost 461 :Not enough parameters\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
+            std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             return;
         }
         std::string clientToOp = tokens[3];
@@ -432,8 +434,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "-o", 2)) {
         if (tokens.size() < 4) {
-            const char* message = ":localhost 461 :Not enough parameters\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
+            std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             return;
         }
         std::string clientToDeop = tokens[3];
@@ -441,9 +443,9 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "+k", 2)) {
         if (tokens.size() < 4) {
-            const char* message = ":localhost 461 :Not enough parameters\r\n";
+            std::string message = "localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
             std::cout << message << std::endl;
-            send(clientSocket, message, std::strlen(message), 0);
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             return;
         }
         std::string password = tokens[3];
@@ -459,8 +461,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     else if (!strncmp(mode, "-k", 2)) {
         if (!senderClient->currentChannel->_isPasswordProtected) {
-            const char* message = ":localhost 467 :Channel key not set\r\n";
-            send(clientSocket, message, std::strlen(message), 0);
+            std::string message = "localhost 467 :Channel key not set\r\n";
+            send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             return;
         }
         senderClient->currentChannel->removePasswd();
@@ -501,7 +503,7 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
         std::vector<std::string>::iterator itPassword = password.begin();
         for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
             if (_channels[*it]) {
-                if (_channels[*it]->_isPasswordProtected && (itPassword != password.end() && _channels[*it]->_password == *itPassword)) {
+                if (_channels[*it]->_isPasswordProtected && (itPassword != password.end() && _channels[*it]->_password != *itPassword)) {
                     std::string message = ":localhost 475 " + senderClient->_name + " " + *it + " :Wrong password\r\n";
                     send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
                     return;
