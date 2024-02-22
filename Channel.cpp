@@ -6,7 +6,7 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/22 12:29:16 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/22 15:17:34 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void Channel::setModeTopic(bool mode) {
 }
 
 void Channel::setTopic(std::string &topic) {
-    topic = topic.substr(0, topic.size() - 1);
+    topic = topic.substr(0, topic.size());
     _topic = topic;
 }
 

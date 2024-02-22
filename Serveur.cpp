@@ -197,7 +197,11 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
                 return;
             }
             if (topic[0] == ':')
-                topic = topic.substr(1, topic.length() - 1);
+                topic = topic.erase(0 ,1);
+            if (topic[topic.length() - 1] == '\n')
+                topic.erase(topic.length() - 1);
+            if (topic[topic.length() - 1] == '\r')
+                topic.erase(topic.length() - 1);
             _channels[channelName]->setTopic(topic);
             std::string message = ":localhost 332 " + senderClient->_name + " " + channelName + " :" + topic + "\r\n";
             _channels[channelName]->broadcastMessage(message);
