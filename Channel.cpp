@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/22 15:57:02 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/23 21:38:30 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,15 @@ void Channel::sendMessage(const std::string &message, Client &sender) {
             std::string messageToSend = message;
             if (messageToSend[0] == ':')
                 messageToSend = messageToSend.substr(1);
-            std::string notification = ":" + sender._name + " PRIVMSG " + _name + " :" + messageToSend + "\r\n";
+            // if client is operator, add operator prefix
+            std::string notification;
+            if (isOperator(sender._name)) {
+                notification = ":\x02\x03";
+                notification +=  "04(+)" + sender._name + "\02\x03";
+                notification +=  "04 PRIVMSG " + _name + " :" + messageToSend + "\r\n";
+            }
+            else
+                notification = ":" + sender._name + " PRIVMSG " + _name + " :" + messageToSend + "\r\n";
             send((*it).second->_socket, notification.c_str(), notification.length(), 0);
         }
     }

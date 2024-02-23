@@ -8,6 +8,10 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
         std::string textToSend = command.substr(command.find(" ") + 1);
         if (_channels.find(channelName) != _channels.end()) {
             if (_channels[channelName]->_clients.count(senderClient->_name)) {
+                if (textToSend[textToSend.length() - 1] == '\n')
+                    textToSend.erase(textToSend.length() - 1);
+                if (textToSend[textToSend.length() - 1] == '\r')
+                    textToSend.erase(textToSend.length() - 1);
                 _channels[channelName]->sendMessage(textToSend, *senderClient);
             }
             else {
