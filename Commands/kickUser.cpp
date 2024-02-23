@@ -46,7 +46,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
                 client.currentChannel = NULL;
                 senderClient->currentChannel->_clients.erase(client._name);
                 std::cout << "Client " << senderClient->_name << " kicked : " << *it << " from channel " << senderClient->currentChannel->_name << std::endl;
-                notification = ":" + senderClient->_name + " KICK " + senderClient->currentChannel->_name + " " + *it + " :have been kicked from the channel.\r\n";
+                notification = ":" + senderClient->_name + " KICK " + senderClient->currentChannel->_name + " " + *it + " :Have been kicked from the channel.\r\n";
                 senderClient->currentChannel->broadcastMessage(notification);
                 senderClient->currentChannel->_operators.erase(client._name);
             }
