@@ -33,7 +33,8 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
                 textToSend.erase(textToSend.length() - 1);
             if (textToSend[textToSend.length() - 1] == '\r')
                 textToSend.erase(textToSend.length() - 1);
-            for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            std::deque<Client>::iterator it;
+            for (it = _clients.begin(); it != _clients.end(); ++it) {
                 std::cout << it->_name << " " << receiverName << std::endl;
                 if (it->_name == receiverName) {
                     if (textToSend[0] == ':')
@@ -43,6 +44,10 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
                     send(it->_socket, message.c_str(), message.length(), 0);
                     break;
                 }
+            }
+            if (it == _clients.end()) {
+                std::string message = ":localhost 403 " + senderClient->_name + " " + receiverName + " :No such nickname\r\n";
+                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
             }
         }
     }
