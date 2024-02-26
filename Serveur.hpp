@@ -44,7 +44,7 @@ struct Command {
 
 class Server {
 public:
-    Server(int _port);
+    Server(int _port, std::string _password);
     ~Server();
     void start();
     int bindSocket();
@@ -67,6 +67,7 @@ public:
     void ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     void quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient);
     int getSocket(){return _serverSocket;};
+    bool checkPassword(std::string commands);
 
 
 private:
@@ -77,4 +78,5 @@ private:
     fd_set _masterSet;
     int _maxFd;
     std::map<std::string, Channel*> _channels;
+    std::string _password;
 };

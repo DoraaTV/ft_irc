@@ -12,7 +12,7 @@ struct ClientFinder {
     }
 };
 
-Server::Server(int _port) : _port(_port), _maxFd(0) {
+Server::Server(int port, std::string password) : _port(port), _maxFd(0), _password(password) {
     _serverSocket = createSocket();
     FD_ZERO(&_masterSet);
     FD_SET(_serverSocket, &_masterSet);
@@ -192,6 +192,17 @@ int Server::listenForConnections() {
     return (0);
 }
 
+bool Server::checkPassword(std::string commands) {
+    std::cout << "commands: " << commands << std::endl;
+    if (_password.empty())
+        return (true);
+    if (commands.find("PASS") != std::string::npos || commands.find("CAP") != std::string::npos)
+    {
+        return true;
+    }
+    return false;
+}
+
 // Client se connecte
 void Server::handleNewConnection(int _serverSocket) {
     sockaddr_in clientAddress;
@@ -254,22 +265,40 @@ void Server::handleExistingConnection(int clientSocket) {
         std::cout << "Received from socket " << clientSocket << ": " << buffer << std::endl;
         //choisir un nom à la connexion
         std::string commandlist = buffer;
+        if (it->_isconnected == false && !checkPassword(commandlist))
+        {
+            std::string passMissingMsg = ":localhost 461 : Connection refused, password is missing \r\n";
+            send(clientSocket, passMissingMsg.c_str(), passMissingMsg.length(), 0);
+            close(it->_socket);
+            FD_CLR(clientSocket, &_masterSet);
+            return;
+        }
         std::vector<std::string> commands = split(commandlist, '\n');
         for (std::vector<std::string>::iterator commandit = commands.begin(); commandit != commands.end(); commandit++)
         {
             if (it != _clients.end() && it->_name.empty() && buffer[0] != '\0') //le parsing devra check si le name est valid !!!!
             {
-                // for (int i = 0; buffer[i]; i++)
-                // {
-                //     if (buffer[i] == '\n')
-                //     {
-                //         buffer[i] = 0;
-                //         break;
-                //     }
-                // }
                 if (!strncmp(commandit->c_str(), "NICK", 4)) {
                     changeNick(const_cast<char*>(commandit->c_str()), clientSocket, it);
                     continue ;
+                }
+                if (it->_isconnected == false && !strncmp(commandit->c_str(), "PASS", 4)) {
+                    std::vector<std::string> password = split(*commandit, ' ');
+                    if (password[1].length() >= _password.length() && strncmp(password[1].c_str(), _password.c_str(), _password.length()))
+                    {
+                        std::cout << password[1].length() << std::endl;
+                        std::cout << _password.length() << std::endl;
+                        std::string wrongPassMsg = ":localhost 464 : Connection refused, wrong password, must be " + _password + "\r\n";
+                        send(clientSocket, wrongPassMsg.c_str(), wrongPassMsg.length(), 0);
+                        close(it->_socket);
+                        FD_CLR(clientSocket, &_masterSet);
+                        break;
+                    }
+                    else
+                    {
+                        it->_isconnected = true;
+                        continue;
+                    }
                 }
                 if (!strncmp(commandit->c_str(), "CAP", 3)) {
                     if (it->_name.empty())

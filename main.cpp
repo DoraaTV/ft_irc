@@ -2,9 +2,9 @@
 #include "Client.hpp"
 
 int main(int ac, char **av) {
-    if (ac != 2 || std::strlen(av[1]) > 5)
+    if (ac != 3 || std::strlen(av[1]) > 5)
     {
-        std::cout << "usage: ./irc <port>" << std::endl;
+        std::cout << "usage: ./irc <port> <password>" << std::endl;
         return (1);
     }
     int port = std::atoi(av[1]);
@@ -13,7 +13,7 @@ int main(int ac, char **av) {
         std::cout << "port must be between 1 and 99999" << std::endl;
         return (1);
     }
-    Server server(port);
+    Server server(port, av[2]);
     if (server.bindSocket() == -1 ||
         server.listenForConnections() == -1)
     {
