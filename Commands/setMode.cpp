@@ -15,8 +15,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     if (channelName.find("\r") != std::string::npos)
         channelName.erase(channelName.length() - 1);
     if (!_channels[channelName]) {
-        std::string message = ":localhost 403 :No such channel\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
         return;
     }
     std::string mode2 = tokens[2];

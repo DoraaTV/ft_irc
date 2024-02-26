@@ -50,7 +50,6 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         return;
     }
     else {
-        std::string message = ":localhost 403 " + senderClient->_name + " " + channelName + " :No such channel\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
     }
 }

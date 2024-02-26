@@ -46,8 +46,7 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
                 }
             }
             if (it == _clients.end()) {
-                std::string message = ":localhost 403 " + senderClient->_name + " " + receiverName + " :No such nickname\r\n";
-                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+                send(clientSocket, ERR_NOSUCHNICK(senderClient, receiverName).c_str(), std::strlen(ERR_NOSUCHNICK(senderClient, receiverName).c_str()), 0);
             }
         }
     }

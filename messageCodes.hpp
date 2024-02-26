@@ -26,7 +26,7 @@
 # define RPL_ENDOFMOTD(client) 						(":localhost 376 " + client.get_nickname() + " :End of /MOTD command.\r\n")													// 376
 
 
-# define ERR_NOSUCHNICK(client, nick)				(":localhost 401 " + client.get_nickname() + " " + nick + " :Nickname does not exist.\r\n") 								// 401
+# define ERR_NOSUCHNICK(client, nick)				(":localhost 401 " + client->get_nickname() + " " + nick + " :Nickname does not exist.\r\n") 								// 401
 # define ERR_NOSUCHCHANNEL(client, channel)			(":localhost 403 " + client->get_nickname() + " " + channel + " :No such channel\r\n") 										// 403
 # define ERR_CANNOTSENDTOCHAN(client, channel)		(":localhost 404 " + client.get_nickname() + " " + channel + " :Cannot send to channel\r\n") 								// 404
 # define ERR_UNKNOWNCOMMAND(client)					(":localhost 421 " + client.get_nickname() + " :Command not found.\r\n") 													// 421
