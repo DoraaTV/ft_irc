@@ -228,6 +228,8 @@ void Server::handleExistingConnection(int clientSocket) {
     char buffer[BUFFER_SIZE] = {};
     ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
     std::deque<Client>::iterator it = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+    if (it->_input.find('\n') != std::string::npos)
+        it->_input.clear();
     if (it->_name.empty()) {
         std::cout << "Client " << clientSocket << " is not identified" << std::endl;
     }
@@ -261,10 +263,12 @@ void Server::handleExistingConnection(int clientSocket) {
             }
         }
     } else {
-
         std::cout << "Received from socket " << clientSocket << ": " << buffer << std::endl;
         //choisir un nom à la connexion
-        std::string commandlist = buffer;
+        it->_input += buffer;
+        if (it->_input.find('\n') == std::string::npos)
+            return;
+        std::string commandlist = it->_input.c_str();
         if (it->_isconnected == false && !checkPassword(commandlist))
         {
             std::string passMissingMsg = ":localhost 461 : Connection refused, password is missing \r\n";
@@ -322,6 +326,7 @@ void Server::handleExistingConnection(int clientSocket) {
             else
             {
                 std::deque<Client>::iterator senderClient = std::find_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket));
+
                 if (senderClient != _clients.end() && !senderClient->_name.empty()) {
                     //commande
                     if (handleCommand(const_cast<char *>(commandit->c_str()), clientSocket, senderClient) == 0)

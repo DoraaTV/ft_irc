@@ -27,4 +27,5 @@ public:
     Channel *currentChannel;
     std::vector<Channel *> _channels;
     bool _isconnected;
+    std::string _input;
 };
