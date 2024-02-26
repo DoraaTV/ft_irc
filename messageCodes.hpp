@@ -1,6 +1,6 @@
 #pragma once
 
-# define FULL_HOST(client) (":" + client.get_nickname() + "!" + client.get_nickname() + "@localhost")
+# define FULL_HOST(client) (":" + client->get_nickname() + "!" + client->get_nickname() + "@localhost")
 
 # define RPL_PRIVMSG(client, msg, target)			(FULL_HOST(client) + " PRIVMSG " + target + " " + msg + "\r\n")
 # define RPL_JOIN(client, channel)					(FULL_HOST(client) + " JOIN " + channel + "\r\n")
