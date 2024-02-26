@@ -23,6 +23,7 @@ public:
 public:
     int _socket;
     std::string _name;
+    std::string get_nickname();
     unsigned int _messageCount;
     Channel *currentChannel;
     std::vector<Channel *> _channels;

@@ -11,3 +11,7 @@ Client::~Client() {
     //     this->currentChannel->ClientLeft(*this);
     return ;
 }
+
+std::string Client::get_nickname() {
+    return nickname;
+}

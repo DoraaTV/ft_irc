@@ -32,6 +32,10 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
+    if (!_channels[channelName]) {
+        send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
+        return;
+    }
     if (senderClient->currentChannel->isInviteOnly() && !senderClient->currentChannel->isOperator(senderClient->_name))
     {
         std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
