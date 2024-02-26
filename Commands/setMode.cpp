@@ -45,13 +45,13 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
-    if (!strncmp(mode, "+i", 2)) {
+    if (!std::strncmp(mode, "+i", 2)) {
         senderClient->currentChannel->setInviteOnly(true);
     }
-    else if (!strncmp(mode, "-i", 2)) {
+    else if (!std::strncmp(mode, "-i", 2)) {
         senderClient->currentChannel->setInviteOnly(false);
     }
-    else if (!strncmp(mode, "+l", 2)) {
+    else if (!std::strncmp(mode, "+l", 2)) {
         if (tokens.size() < 4) {
             std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
             send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -60,10 +60,10 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         int limit = std::atoi(tokens[3].c_str());
         senderClient->currentChannel->setLimit(limit);
     }
-    else if (!strncmp(mode, "-l", 2)) {
+    else if (!std::strncmp(mode, "-l", 2)) {
         senderClient->currentChannel->setLimit(0);
     }
-    else if (!strncmp(mode, "+o", 2)) {
+    else if (!std::strncmp(mode, "+o", 2)) {
         if (tokens.size() < 4) {
             std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
             send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -72,7 +72,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         std::string clientToOp = tokens[3];
         senderClient->currentChannel->addOperator(clientToOp);
     }
-    else if (!strncmp(mode, "-o", 2)) {
+    else if (!std::strncmp(mode, "-o", 2)) {
         if (tokens.size() < 4) {
             std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
             send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -81,7 +81,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         std::string clientToDeop = tokens[3];
         senderClient->currentChannel->removeOperator(clientToDeop);
     }
-    else if (!strncmp(mode, "+k", 2)) {
+    else if (!std::strncmp(mode, "+k", 2)) {
         if (tokens.size() < 4) {
             std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
             send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -97,7 +97,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
     }
-    else if (!strncmp(mode, "-k", 2)) {
+    else if (!std::strncmp(mode, "-k", 2)) {
         if (!senderClient->currentChannel->_isPasswordProtected) {
             std::string message = "localhost 467 :Channel key not set\r\n";
             send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
@@ -108,10 +108,10 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         std::cout << message << std::endl;
         send(clientSocket, message.c_str(), message.length(), 0);
     }
-    else if (!strncmp(mode, "+t", 2)) {
+    else if (!std::strncmp(mode, "+t", 2)) {
         senderClient->currentChannel->setModeTopic(true);
     }
-    else if (!strncmp(mode, "-t", 2)) {
+    else if (!std::strncmp(mode, "-t", 2)) {
         senderClient->currentChannel->setModeTopic(false);
     }
     else {

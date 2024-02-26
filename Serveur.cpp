@@ -278,13 +278,13 @@ void Server::handleExistingConnection(int clientSocket) {
         {
             if (it != _clients.end() && it->_name.empty() && buffer[0] != '\0') //le parsing devra check si le name est valid !!!!
             {
-                if (!strncmp(commandit->c_str(), "NICK", 4)) {
+                if (!std::strncmp(commandit->c_str(), "NICK", 4)) {
                     changeNick(const_cast<char*>(commandit->c_str()), clientSocket, it);
                     continue ;
                 }
-                if (it->_isconnected == false && !strncmp(commandit->c_str(), "PASS", 4)) {
+                if (it->_isconnected == false && !std::strncmp(commandit->c_str(), "PASS", 4)) {
                     std::vector<std::string> password = split(*commandit, ' ');
-                    if (password[1].length() >= _password.length() && strncmp(password[1].c_str(), _password.c_str(), _password.length()))
+                    if (password[1].length() >= _password.length() && std::strncmp(password[1].c_str(), _password.c_str(), _password.length()))
                     {
                         std::cout << password[1].length() << std::endl;
                         std::cout << _password.length() << std::endl;
@@ -300,7 +300,7 @@ void Server::handleExistingConnection(int clientSocket) {
                         continue;
                     }
                 }
-                if (!strncmp(commandit->c_str(), "CAP", 3)) {
+                if (!std::strncmp(commandit->c_str(), "CAP", 3)) {
                     if (it->_name.empty())
                         continue ;
                     std::string message1 = ":@localhost NICK" + it->_name + "\r\n";
