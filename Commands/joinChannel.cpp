@@ -6,7 +6,7 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:04 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:14:05 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 15:19:39 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,10 @@ void Server::casePasswd(int clientSocket, std::deque<Client>::iterator senderCli
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected && (itPassword != password.end() && _channels[channelName]->_password != *itPassword)) {
-                send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
+                if (_channels[channelName]->_invited[senderClient->_name])
+                    _channels[channelName]->ClientJoin(*senderClient);
+                else
+                    send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
                 continue;
             }
             _channels[channelName]->ClientJoin(*senderClient);
@@ -73,7 +76,10 @@ void Server::caseNormal(int clientSocket, std::deque<Client>::iterator senderCli
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected) {
-                send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
+                 if (_channels[channelName]->_invited[senderClient->_name])
+                    _channels[channelName]->ClientJoin(*senderClient);
+                else
+                    send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
                 return;
             }
             _channels[channelName]->ClientJoin(*senderClient);

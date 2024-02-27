@@ -6,7 +6,7 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:02 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:14:03 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 15:21:31 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
     }
     else {
         std::cout << "Client " << senderClient->_name << " has invited client " << clientToInviteName << " to the channel " << senderClient->currentChannel->_name << std::endl;
-        if (senderClient->currentChannel->_invited.count(clientToInviteName)) {
+        if (senderClient->currentChannel->_invited[clientToInviteName]) {
             senderClient->currentChannel->_invited.erase(clientToInviteName);
             std::string message = "Your invitation to " + senderClient->currentChannel->_name + " has been canceled.\r\n";
             send(it->_socket, message.c_str(), message.length(), 0);
