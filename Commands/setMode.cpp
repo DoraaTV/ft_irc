@@ -6,11 +6,11 @@
 /*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:17 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 17:09:08 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/27 17:11:20 by syakovle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Serveur.hpp"
+#include "../Server/Server.hpp"
 
 int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
 int limiteSet(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, char *buffer, std::vector<std::string> tokens);
