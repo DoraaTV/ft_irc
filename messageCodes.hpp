@@ -19,7 +19,7 @@
 # define RPL_CHANNELMODEIS(client, channel, modes)	(":localhost 324 " + client.get_nickname() + " " + channel + " " + modes + "\r\n")											// 324
 # define RPL_NOTOPIC(client, channel)				(":localhost 331 " + client.get_nickname() + " " + channel + " :No topic is set.\r\n") 										// 331
 # define RPL_TOPIC(client, channel, topic)			(":localhost 332 " + client.get_nickname() + " " + channel + " " + topic + "\r\n") 											// 332
-# define RPL_INVITING(client, nick, channel)		(":localhost 341 " + client.get_nickname() + " " + nick + " " + channel + "\r\n") 											// 341
+# define RPL_INVITING(client, nick, channel)		(":localhost 341 " + client->get_nickname() + " " + nick + " " + channel + "\r\n") 											// 341
 # define RPL_NAMREPLY(client, channel, op)			(":localhost 353 " + client.get_nickname() + " = " + channel + " :" + op + "\r\n") 											// 353
 # define RPL_MOTD(client, motd_line) 				(":localhost 372 " + client.get_nickname() + " :" + motd_line + "\r\n")														// 372
 # define RPL_MOTDSTART(client)						(":localhost 375 " + client.get_nickname() + " :- localhost Message of the day - \r\n")										// 375

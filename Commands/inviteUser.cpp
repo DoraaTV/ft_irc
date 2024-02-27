@@ -49,8 +49,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
             send(it->_socket, message.c_str(), message.length(), 0);
         } else {
             senderClient->currentChannel->_invited[clientToInviteName] = &(*it);
-            std::string message = "You have been invited to " + senderClient->currentChannel->_name + ".\r\n";
-            send(it->_socket, message.c_str(), message.length(), 0);
+            send(it->_socket, RPL_INVITING(senderClient, clientToInviteName, senderClient->currentChannel->_name).c_str(), std::strlen(RPL_INVITING(senderClient, clientToInviteName, senderClient->currentChannel->_name).c_str()), 0);
         }
     }
 }
