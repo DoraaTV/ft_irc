@@ -144,7 +144,12 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     // should be /MODE <channel name> <mode> <client name>
     std::vector <std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 3) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
+        std::string buffer2 = buffer;
+        if (buffer2.find("\n") != std::string::npos)
+            buffer2.erase(buffer2.length() - 1);
+        if (buffer2.find("\r") != std::string::npos)
+            buffer2.erase(buffer2.length() - 1);
+        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer2 + " :Not enough parameters.\r\n";
         send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
         return;
     }
@@ -159,11 +164,8 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
     std::string mode2 = tokens[2];
     const char *mode = mode2.c_str();
-    std::cout << "mode: " << mode << std::endl;
     if (mode2.length() < 2) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        std::cout << message << std::endl;
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str()), 0);
         return;
     }
     std::vector<Channel *>::iterator it2;
@@ -174,13 +176,11 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
         }
     }
     if (it2 == senderClient->_channels.end()) {
-        std::string message = ":localhost 442 :You're not on that channel\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
         return;
     }
     else if (!senderClient->currentChannel->isOperator(senderClient->_name)) {
-        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
         return;
     }
 

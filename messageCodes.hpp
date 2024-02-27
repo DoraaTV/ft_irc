@@ -34,10 +34,10 @@
 # define ERR_ERRONEUSNICKNAME(client, nick)			(":localhost 432 " + client.get_nickname() + " "+ nick + " :Erroneus nickname\r\n")											// 432
 # define ERR_NICKNAMEINUSE(client, nick)			(":localhost 433 " + nick + " " + nick + " : NICK already used\r\n")														// 433
 # define ERR_USERNOTINCHANNEL(client, nick, channel)(":localhost 441 " + client.get_nickname() + " :User is not in that channel.\r\n") 											// 441
-# define ERR_NOTONCHANNEL(client, channel)			(":localhost 442 " + client.get_nickname() + " " + channel + " :You re not on that channel\r\n") 							// 442
+# define ERR_NOTONCHANNEL(client, channel)			(":localhost 442 " + client->get_nickname() + " " + channel + " :You re not on that channel\r\n") 							// 442
 # define ERR_USERONCHANNEL(client, nick, channel) 	(":localhost 443 " + client.get_nickname() + " " + nick + " "+ channel + " :is already on channel\r\n") 					// 443
 # define ERR_NOTREGISTERED(client)					(":localhost 451 " + client.get_nickname() + " :You have not registered.\r\n") 												// 451
-# define ERR_NEEDMOREPARAMS(client, command)		(":localhost 461 " + client.get_nickname() + " " + command + " :Not anough parameters\r\n") 								// 461
+# define ERR_NEEDMOREPARAMS(client, command)		(":localhost 461 " + client->get_nickname() + " " + command + " :Not anough parameters\r\n") 								// 461
 # define ERR_ALREADYREGISTERED(client)				(":localhost 462 " + client.get_nickname() + " :User is already registered.\r\n") 											// 462
 # define ERR_PASSWDMISMATCH(client)					(":localhost 464 " + client.get_nickname() + " :Password incorrect.\r\n") 													// 464
 # define RPL_ENDOFNAMES(client, channel)			(":localhost 366 " + client.get_nickname() + " " + channel + " " + "End of /NAMES list.\r\n") 								// 366
@@ -45,6 +45,6 @@
 # define ERR_INVITEONLYCHAN(client, channel)		(":localhost 473 " + client.get_nickname() + " " + channel + " :Cannot join channel (+i)\r\n") 								// 473
 # define ERR_BANNEDFROMCHAN(client, channel)		(":localhost 474 " + client.get_nickname() + " " + channel + " :cannot join channel (+b)\r\n") 								// 474
 # define ERR_BADCHANNELKEY(client, channel)			(":localhost 475 " + client.get_nickname() + " " + channel + " :Cannot join channel (+k) - bad key\r\n") 					// 475
-# define ERR_CHANOPPRIVSNEEDED(client, channel)		(":localhost 482 " + client.get_nickname() + " " + channel + " :You're not channel operator\r\n") 							// 482
+# define ERR_CHANOPPRIVSNEEDED(client, channel)	    (":localhost 482 " + client->get_nickname() + " " + channel + " :You're not channel operator\r\n") 							// 482
 # define ERR_UMODEUNKNOWNFLAG(client)				(":localhost 501 " + client.get_nickname() + " :Unknown MODE flag\r\n") 													// 501
 # define ERR_USERSDONTMATCH(client)					(":localhost 502 " + client.get_nickname() + " :Cant change mode for other users\r\n") 										// 502
