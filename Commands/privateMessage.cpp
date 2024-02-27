@@ -6,11 +6,12 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:13:50 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 17:14:30 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 17:53:11 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Server/Server.hpp"
+#include <stdio.h>
 
 void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     static_cast<void>(clientSocket);
@@ -39,21 +40,12 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
         if (space_pos != std::string::npos) {
             // std::string receiverName = command.substr(0, space_pos);
             std::cout << "COmmand: " << command << std::endl;
-            std::string textToSend = command.substr(command.find(" ") + 1);
-            if (!std::strncmp(textToSend.c_str(), "SEND", 4)) {
-                if (textToSend[textToSend.length() - 1] == '\n')
-                    textToSend.erase(textToSend.length() - 1);
-                if (textToSend[textToSend.length() - 1] == '\r')
-                    textToSend.erase(textToSend.length() - 1);
+            std::string textToSend = command;
+            // textToSend = command.substr(command.find(" ") + 1);
+            if (textToSend[textToSend.length() - 1] == '\n')
+            textToSend.erase(textToSend.length() - 1);
+            if (textToSend[textToSend.length() - 1] == '\r')
                 textToSend.erase(textToSend.length() - 1);
-                textToSend = "DCC " + textToSend;
-            }
-            else {
-            if (textToSend[textToSend.length() - 2] == '\n')
-                textToSend.erase(textToSend.length() - 2);
-            if (textToSend[textToSend.length() - 2] == '\r')
-                textToSend.erase(textToSend.length() - 2);
-            }
             std::cout << command << std::endl;
             std::deque<Client>::iterator it;
             for (it = _clients.begin(); it != _clients.end(); ++it) {
@@ -61,8 +53,7 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
                 if (it->_name == receiverName) {
                     if (textToSend[0] == ':')
                         textToSend.erase(0, 1);
-                    std::string message = ":" + senderClient->_name + " PRIVMSG " + receiverName + " :" + textToSend + "\r\n";
-                    std::cout << message << std::endl;
+                    std::cout <<  RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str() << std::endl;
                     send(it->_socket, RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str(), std::strlen(RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str()), 0);
                     break;
                 }
