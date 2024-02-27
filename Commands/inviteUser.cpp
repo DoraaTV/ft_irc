@@ -23,16 +23,10 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
         return;
     }
     clientToInviteName = tokens[0];
-    if (clientToInviteName.find("\n") != std::string::npos)
-        clientToInviteName.erase(clientToInviteName.length() - 1);
-    if (clientToInviteName.find("\r") != std::string::npos)
-        clientToInviteName.erase(clientToInviteName.length() - 1);
+    removeTrailingCarriageReturn(clientToInviteName);
 
     channelName = tokens[1];
-    if (channelName.find("\n") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
-    if (channelName.find("\r") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
+    removeTrailingCarriageReturn(channelName);
     std::deque<Client>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it)
         if (it->_name == clientToInviteName)

@@ -27,10 +27,7 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
     }
     std::string channelNames = tokens[0];
     // if there is \n at the end of the last channel name
-    if (tokens[tokens.size() - 1].find("\n") != std::string::npos)
-        tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
-    if (tokens[tokens.size() - 1].find("\r") != std::string::npos)
-        tokens[tokens.size() - 1].erase(tokens[tokens.size() - 1].length() - 1);
+    removeTrailingCarriageReturn(tokens[tokens.size() - 1]);
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
         std::string channelName;
         if (it->c_str()[0] != '#')

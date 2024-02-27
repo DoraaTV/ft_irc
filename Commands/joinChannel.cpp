@@ -29,22 +29,19 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
     }
     else {
         caseNormal(clientSocket, senderClient, tokens2);
-    }    
+    }
 }
 
 void Server::casePasswd(int clientSocket, std::deque<Client>::iterator senderClient, std::vector<std::string> tokens, std::vector<std::string> tokens2) {
     std::vector<std::string> password = split(tokens[2], ',');
     //if there is \n at the end of the last password
-    if (password[password.size() - 1].find("\n") != std::string::npos)
-        password[password.size() - 1].erase(password[password.size() - 1].length() - 1);
-    if (password[password.size() - 1].find("\r") != std::string::npos)
-        password[password.size() - 1].erase(password[password.size() - 1].length() - 1);
+    removeTrailingCarriageReturn(password[password.size() - 1]);
     std::vector<std::string>::iterator itPassword = password.begin();
     for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
         std::string channelName;
         if (it->c_str()[0] != '#')
             channelName = "#" + *it;
-        else 
+        else
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected && (itPassword != password.end() && _channels[channelName]->_password != *itPassword)) {
@@ -64,10 +61,7 @@ void Server::casePasswd(int clientSocket, std::deque<Client>::iterator senderCli
 
 void Server::caseNormal(int clientSocket, std::deque<Client>::iterator senderClient, std::vector<std::string> tokens2) {
     // if there is \n at the end of the last channel name
-    if (tokens2[tokens2.size() - 1].find("\n") != std::string::npos)
-        tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
-    if (tokens2[tokens2.size() - 1].find("\r") != std::string::npos)
-        tokens2[tokens2.size() - 1].erase(tokens2[tokens2.size() - 1].length() - 1);
+    removeTrailingCarriageReturn(tokens2[tokens2.size() - 1]);
     for (std::vector<std::string>::iterator it = tokens2.begin(); it != tokens2.end(); ++it) {
         std::string channelName;
         if (it->c_str()[0] != '#')
@@ -76,7 +70,7 @@ void Server::caseNormal(int clientSocket, std::deque<Client>::iterator senderCli
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected) {
-                 if (_channels[channelName]->_invited[senderClient->_name])
+                if (_channels[channelName]->_invited[senderClient->_name])
                     _channels[channelName]->ClientJoin(*senderClient);
                 else
                     send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);

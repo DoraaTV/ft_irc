@@ -23,19 +23,11 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     //Parse args and buffer, do checks on channel and client
     std::vector <std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 3) {
-        std::string buffer2 = buffer;
-        if (buffer2.find("\n") != std::string::npos)
-            buffer2.erase(buffer2.length() - 1);
-        if (buffer2.find("\r") != std::string::npos)
-            buffer2.erase(buffer2.length() - 1);
         send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str()), 0);
         return;
     }
     std::string channelName = tokens[1];
-    if (channelName.find("\n") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
-    if (channelName.find("\r") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
+    removeTrailingCarriageReturn(channelName);
     if (!_channels[channelName]) {
         send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
         return;
@@ -121,40 +113,34 @@ int limiteSet(int clientSocket, std::deque<Client>::iterator senderClient, const
 int Server::operatorAdd(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens) {
     if (!std::strncmp(mode, "+o", 2)) {
         if (tokens.size() < 4) {
-                send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str()), 0);
-                return (1);
-            }
-            std::string clientToOp = tokens[3];
-            if (clientToOp.find("\n") != std::string::npos)
-                clientToOp.erase(clientToOp.length() - 1);
-            if (clientToOp.find("\r") != std::string::npos)
-                clientToOp.erase(clientToOp.length() - 1);
-            for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-                if (it->_name == clientToOp) {
-                    if (senderClient->currentChannel->_clients.count(clientToOp)) {
-                        senderClient->currentChannel->addOperator(it->_name);
-                        send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str()), 0);
-                        return (1);
-                    }
-                    else {
-                        send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "User not in channel", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "User not in channel", "").c_str()), 0);
-                        return (1);
-                    }
-                }
-            }
-            send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "No such nick", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "No such nick", "").c_str()), 0);
+            send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str()), 0);
             return (1);
         }
+        std::string clientToOp = tokens[3];
+        removeTrailingCarriageReturn(clientToOp);
+        for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+            if (it->_name == clientToOp) {
+                if (senderClient->currentChannel->_clients.count(clientToOp)) {
+                    senderClient->currentChannel->addOperator(it->_name);
+                    send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str()), 0);
+                    return (1);
+                }
+                else {
+                    send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "User not in channel", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "User not in channel", "").c_str()), 0);
+                    return (1);
+                }
+            }
+        }
+        send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "No such nick", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "No such nick", "").c_str()), 0);
+        return (1);
+    }
     else if (!std::strncmp(mode, "-o", 2)) {
         if (tokens.size() < 4) {
             send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Error, not enough parameters", "").c_str()), 0);
             return (1);
         }
         std::string clientToOp = tokens[3];
-        if (clientToOp.find("\n") != std::string::npos)
-            clientToOp.erase(clientToOp.length() - 1);
-        if (clientToOp.find("\r") != std::string::npos)
-            clientToOp.erase(clientToOp.length() - 1);
+        removeTrailingCarriageReturn(clientToOp);
         for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
             if (it->_name == clientToOp) {
                 if (senderClient->currentChannel->_clients.count(clientToOp)) {
@@ -181,10 +167,7 @@ int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const
             return (1);
         }
         std::string password = tokens[3];
-        if (password.find("\n") != std::string::npos)
-            password.erase(password.length() - 1);
-        if (password.find("\r") != std::string::npos)
-            password.erase(password.length() - 1);
+        removeTrailingCarriageReturn(password);
         senderClient->currentChannel->setPasswd(password);
         std::string message = "Password for channel " + senderClient->currentChannel->_name + " has been set to " + password + "\r\n";
         if (senderClient->currentChannel->_isInviteOnly)

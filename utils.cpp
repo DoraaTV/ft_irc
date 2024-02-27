@@ -22,3 +22,9 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     return tokens;
 }
 
+void    removeTrailingCarriageReturn(std::string &s) {
+    if (s.find("\n") != std::string::npos)
+        s.erase(s.length() - 1);
+    if (s.find("\r") != std::string::npos)
+        s.erase(s.length() - 1);
+}

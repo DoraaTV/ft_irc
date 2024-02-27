@@ -42,12 +42,12 @@ bool Channel::isOperator(const std::string &clientName) {
 }
 
 void Channel::setModeTopic(bool mode) {
-    
+
     _isTopicRestricted = mode;
 }
 
 void Channel::setTopic(std::string &topic) {
-    
+
     topic = topic.substr(0, topic.size());
     _topic = topic;
 }
@@ -92,12 +92,9 @@ void Channel::ClientJoin(Client &client) {
 }
 
 void Channel::addOperator(std::string &clientName) {
-    
-    if (clientName.find("\n") != std::string::npos)
-        clientName = clientName.substr(0, clientName.size() - 1);
-    if (clientName.find("\r") != std::string::npos)
-        clientName = clientName.substr(0, clientName.size() - 1);
-        
+
+    removeTrailingCarriageReturn(clientName);
+
     _operators[clientName] = _clients[clientName];
 
     std::cout << "Operator added to channel " << _name << " : " << clientName << std::endl;
@@ -109,7 +106,7 @@ void Channel::removeOperator(std::string &clientName) {
 }
 
 void Channel::ClientLeft(Client &client) {
-    
+
     // check if client is in channel
     if (_clients.find(client._name) == _clients.end())
         return;
