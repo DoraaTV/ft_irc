@@ -30,3 +30,11 @@ public:
     bool _isconnected;
     std::string _input;
 };
+
+struct ClientFinder {
+    int socketToFind;
+    ClientFinder(int socketToFind) : socketToFind(socketToFind) {}
+    bool operator()(const Client& _client) const {
+        return _client._socket == socketToFind;
+    }
+};

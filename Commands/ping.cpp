@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ping.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:11 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:14:12 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 16:03:43 by syakovle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Serveur.hpp"
+#include "../Server/Server.hpp"
 
 void Server::ping(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 

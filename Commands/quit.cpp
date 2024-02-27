@@ -3,22 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   quit.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:15 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:14:16 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 16:11:07 by syakovle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Serveur.hpp"
-
-struct ClientFinder {
-    int socketToFind;
-    ClientFinder(int socketToFind) : socketToFind(socketToFind) {}
-    bool operator()(const Client& _client) const {
-        return _client._socket == socketToFind;
-    }
-};
+#include "../Server/Server.hpp"
 
 void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
     static_cast<void>(buffer);

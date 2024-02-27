@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
+/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/26 22:17:29 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/27 16:00:18 by syakovle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <string>
 #include <map>
 #include "Client.hpp"
-#include "Serveur.hpp"
+#include "Server/Server.hpp"
 
 class Client;
 

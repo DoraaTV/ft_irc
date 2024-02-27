@@ -1,5 +1,8 @@
 SRC = 	main.cpp \
-		Serveur.cpp \
+		Server/Server.cpp \
+		Server/ServerInit.cpp \
+		Server/ServerHandlers/HandleNewConnect.cpp \
+		Server/ServerHandlers/HandleExistingConnect.cpp \
 		Client.cpp \
 		Channel.cpp \
 		utils.cpp \
@@ -15,6 +18,8 @@ NAME = ircserv
 
 OBJ/%.o: %.cpp
 	@mkdir -p OBJ/Commands
+	@mkdir -p OBJ/Server
+	@mkdir -p OBJ/Server/ServerHandlers
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
 all: $(NAME)
