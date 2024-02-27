@@ -287,12 +287,14 @@ void Server::handleExistingConnection(int clientSocket) {
                     continue ;
                 }
                 if (it->_isconnected == false && !std::strncmp(commandit->c_str(), "PASS", 4)) {
-                    std::vector<std::string> password = split(*commandit, ' ');
-                    if (password[1].length() != _password.length() + 1 || password[1].find(_password) == std::string::npos)
+                    std::string password = split(*commandit, ' ')[1];
+                    if (password.find("\r") != std::string::npos)
+                            password.erase(password.length() - 1);
+                    if (password.length() != _password.length() || password.find(_password) == std::string::npos)
                     {
                         std::string wrongPassMsg = ":localhost 464 : Connection refused, wrong password, must be " + _password + "\r\n";
                         send(clientSocket, wrongPassMsg.c_str(), wrongPassMsg.length(), 0);
-                        close(it->_socket);std::cout << password[1].length() << std::endl;
+                        close(it->_socket);std::cout << password.length() << std::endl;
                         std::cout << _password.length() << std::endl;
                         FD_CLR(clientSocket, &_masterSet);
                         break;

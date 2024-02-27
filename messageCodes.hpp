@@ -1,8 +1,6 @@
 #pragma once
 
-# define FULL_HOST(client) (":" + client->get_nickname() + "!" + client->get_nickname() + "@localhost")
-
-# define RPL_MODE(client, channel, flag, opt)		(FULL_HOST(client) + " MODE " + channel + " " + flag + " " + opt + "\r\n")
+# define RPL_MODE(client, channel, flag, opt)		(":" + client->get_nickname() + "!" + client->get_nickname() + "@localhost" + " MODE " + channel + " " + flag + " " + opt + "\r\n")
 # define RPL_INVITING(client, nick, channel)		(":localhost 341 " + client->get_nickname() + " " + nick + " " + channel + "\r\n") 											// 341
 
 # define ERR_NOSUCHNICK(client, nick)				(":localhost 401 " + client->get_nickname() + " " + nick + " :Nickname does not exist.\r\n") 								// 401

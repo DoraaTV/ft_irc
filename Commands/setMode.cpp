@@ -6,7 +6,7 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:17 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:14:18 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 15:30:31 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ int Server::operatorAdd(int clientSocket, std::deque<Client>::iterator senderCli
                 if (it->_name == clientToOp) {
                     if (senderClient->currentChannel->_clients.count(clientToOp)) {
                         senderClient->currentChannel->addOperator(it->_name);
-                        send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Added operator", clientToOp).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Added operator", clientToOp).c_str()), 0);
+                        send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "+o, added operator", clientToOp).c_str()), 0);
                         return (1);
                     }
                     else {
