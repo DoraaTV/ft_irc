@@ -37,7 +37,7 @@ void Server::casePasswd(int clientSocket, std::deque<Client>::iterator senderCli
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected && (itPassword != password.end() && _channels[channelName]->_password != *itPassword)) {
                 send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
-                return;
+                continue;
             }
             _channels[channelName]->ClientJoin(*senderClient);
         } else
