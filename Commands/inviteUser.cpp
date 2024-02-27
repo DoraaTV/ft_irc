@@ -7,8 +7,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
     std::string clientToInviteName;
     std::vector<std::string> tokens = split(channelName, ' ');
     if (tokens.size() < 2) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "INVITE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "INVITE").c_str()), 0);
         return;
     }
     clientToInviteName = tokens[0];
@@ -28,8 +27,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
             break;
     if (it == _clients.end())
     {
-        std::string message = ":localhost 401 " + senderClient->_name + " " + channelName  + " :No such nick\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NOSUCHNICK(senderClient, clientToInviteName).c_str(), std::strlen(ERR_NOSUCHNICK(senderClient, clientToInviteName).c_str()), 0);
         return;
     }
     if (!_channels[channelName]) {
@@ -38,8 +36,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
     }
     if (senderClient->currentChannel->isInviteOnly() && !senderClient->currentChannel->isOperator(senderClient->_name))
     {
-        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
-        send(clientSocket, message.c_str(), message.length(), 0);
+        send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
     }
     else {
         std::cout << "Client " << senderClient->_name << " has invited client " << clientToInviteName << " to the channel " << senderClient->currentChannel->_name << std::endl;

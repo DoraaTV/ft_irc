@@ -15,8 +15,7 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
                 _channels[channelName]->sendMessage(textToSend, *senderClient);
             }
             else {
-                const char* message = "You are not in this channel\n";
-                send(clientSocket, message, std::strlen(message), 0);
+                send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
             }
         }
         return ;

@@ -5,14 +5,12 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
     // should be /PART <channel name>,<channel name>,etc
     std::vector<std::string> tokens2 = split(buffer, ' ');
     if (tokens2.size() < 2) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "PART").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "PART").c_str()), 0);
         return;
     }
     std::vector<std::string> tokens = split(tokens2[1], ',');
     if (tokens.empty()) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "PART").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "PART").c_str()), 0);
         return;
     }
     std::string channelNames = tokens[0];

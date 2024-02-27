@@ -3,8 +3,7 @@
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
     if (std::strlen(buffer) <= 6) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "TOPIC").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "TOPIC").c_str()), 0);
         return;
     }
     std::string topic;
@@ -25,8 +24,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
         if (isTopic) {
             // check if client is operator
             if (_channels[channelName]->_isTopicRestricted && !_channels[channelName]->isOperator(senderClient->_name)) {
-                std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a allowed to change the topic\r\n";
-                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+                send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
                 return;
             }
             if (topic[0] == ':')

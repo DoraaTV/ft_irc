@@ -4,13 +4,11 @@ void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::ite
 
     std::vector<std::string> tokens = split(buffer, ' ');
     if (tokens.size() < 2) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "JOIN").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "JOIN").c_str()), 0);
         return;
     }
     if (tokens.size() > 3) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Too much parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "JOIN").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "JOIN").c_str()), 0);
         return;
     }
     std::vector<std::string> tokens2 = split(tokens[1], ',');
@@ -38,8 +36,7 @@ void Server::casePasswd(int clientSocket, std::deque<Client>::iterator senderCli
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected && (itPassword != password.end() && _channels[channelName]->_password != *itPassword)) {
-                std::string message = ":localhost 475 " + senderClient->_name + " " + channelName + " :Wrong password\r\n";
-                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+                send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
                 return;
             }
             _channels[channelName]->ClientJoin(*senderClient);
@@ -64,8 +61,7 @@ void Server::caseNormal(int clientSocket, std::deque<Client>::iterator senderCli
             channelName = *it;
         if (_channels[channelName]) {
             if (_channels[channelName]->_isPasswordProtected) {
-                std::string message = ":localhost 475 " + senderClient->_name + " " + channelName + " :Password required\r\n";
-                send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+                send(clientSocket, ERR_BADCHANNELKEY(senderClient, channelName).c_str(), std::strlen(ERR_BADCHANNELKEY(senderClient, channelName).c_str()), 0);
                 return;
             }
             _channels[channelName]->ClientJoin(*senderClient);

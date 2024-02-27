@@ -5,8 +5,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
     // get channelname and set current channel to it
     std::vector<std::string> tokens3 = split(buffer, ' ');
     if (tokens3.size() < 3) {
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "KICK").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "KICK").c_str()), 0);
         return;
     }
 
@@ -20,8 +19,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
         }
     }
     if (it2 == senderClient->_channels.end()) {
-        std::string message = ":localhost 442 :You're not on that channel\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
         return;
     }
 
@@ -35,11 +33,6 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
         //kick all user in the list
         for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
             if (senderClient->currentChannel->_clients.count(*it)) {
-                if (senderClient->_name == *it) {
-                    std::string message = ":localhost 461 " + senderClient->_name + " " + buffer + ":You can't kick yourself\r\n";
-                    send(clientSocket, message.c_str(), message.length(), 0);
-                    return;
-                }
                 Client &client = *(senderClient->currentChannel->_clients[*it]);
                 std::string notification = ":" + *it + " PART " + senderClient->currentChannel->_name + " :You have been kicked from the channel.\r\n";
                 send((client)._socket, notification.c_str(), notification.length(), 0);
@@ -50,10 +43,12 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
                 senderClient->currentChannel->broadcastMessage(notification);
                 senderClient->currentChannel->_operators.erase(client._name);
             }
+            else {
+                send(clientSocket, ERR_USERNOTINCHANNEL(senderClient, *it, senderClient->currentChannel->_name).c_str(), std::strlen(ERR_USERNOTINCHANNEL(senderClient, *it, senderClient->currentChannel->_name).c_str()), 0);
+            }
         }
     }
     else {
-        std::string message = ":localhost 482 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :You're not a channel operator\r\n";
-        send(clientSocket, message.c_str(), message.length(), 0);
+        send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
     }
 }

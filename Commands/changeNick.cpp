@@ -5,8 +5,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
     std::cout << senderClient->_name << std::endl;
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
-        std::string message = "localhost 431 :Please specify a nickname\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NONICKNAMEGIVEN(senderClient).c_str(), std::strlen(ERR_NONICKNAMEGIVEN(senderClient).c_str()), 0);
         return;
     }
     if (newNick[newNick.length() - 1] == '\n')
@@ -15,8 +14,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         newNick.erase(newNick.length() - 1);
     for (std::deque<Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (it->_name == newNick) {
-            std::string message = ":localhost 433 * " + newNick + " :Nickname is already taken\r\n";
-            send(clientSocket, message.c_str(), message.length(), 0);
+            send(clientSocket, ERR_NICKNAMEINUSE(senderClient, newNick).c_str(), std::strlen(ERR_NICKNAMEINUSE(senderClient, newNick).c_str()), 0);
             return;
         }
     }

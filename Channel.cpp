@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/23 21:38:30 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/27 11:34:32 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,13 +71,11 @@ void Channel::removePasswd() {
 void Channel::ClientJoin(Client &client) {
 
     if (_limit && _clients.size() >= _limit) {
-        std::string notification = ":localhost 471 " + client._name + " " + _name + " :Cannot join channel (+l)\r\n";
-        send((client)._socket, notification.c_str(), notification.length(), 0);
+        send((client)._socket, ERR_CHANNELISFULL(client, _name).c_str(), std::strlen(ERR_CHANNELISFULL(client, _name).c_str()), 0);
         return;
     }
     if (_isInviteOnly && _invited.find(client._name) == _invited.end()) {
-        std::string notification = ":localhost 473 " + client._name + " " + _name + " :Cannot join channel (+i)\r\n";
-        send((client)._socket, notification.c_str(), notification.length(), 0);
+        send((client)._socket, ERR_INVITEONLYCHAN(client, _name).c_str(), std::strlen(ERR_INVITEONLYCHAN(client, _name).c_str()), 0);
         return;
     }
     std::cout << "Client " +  client._name + " joined channel : " << _name << std::endl;

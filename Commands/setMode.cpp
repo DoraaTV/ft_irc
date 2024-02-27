@@ -16,8 +16,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
             buffer2.erase(buffer2.length() - 1);
         if (buffer2.find("\r") != std::string::npos)
             buffer2.erase(buffer2.length() - 1);
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer2 + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str()), 0);
         return;
     }
     std::string channelName = tokens[1];
