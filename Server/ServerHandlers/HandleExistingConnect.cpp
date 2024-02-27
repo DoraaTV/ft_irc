@@ -10,18 +10,19 @@ void Server::HandleDisconnect(int clientSocket, ssize_t bytesReceived, std::dequ
     }
 
     // Fermer la connexion et la supprimer du jeu principal et de la liste des clients
-    close(clientSocket);
-    FD_CLR(clientSocket, &_masterSet);
-
-
     if (it != _clients.end()) {
         // Client trouvé, le supprimer
         // std::string leaveMessage = it->_name + " has left the chat.\n";
         // broadcastMessage(clientSocket, leaveMessage);
 
         quit(NULL, clientSocket, it);
-        _clients.erase(it);
+        //_clients.erase(it);
     }
+    close(clientSocket);
+    FD_CLR(clientSocket, &_masterSet);
+
+
+    
 
     // Mettre à jour le maximum des descripteurs de fichiers si nécessaire
     if (clientSocket == _maxFd) {

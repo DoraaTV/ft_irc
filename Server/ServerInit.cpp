@@ -21,7 +21,7 @@ int Server::createSocket() {
 int Server::bindSocket() {
     //creation du serveur avec le _port
     sockaddr_in serverAddress;
-    //memset(&serverAddress, 0, sizeof(serverAddress)) aurait été bien mais on a pas le droit
+    std::memset(&serverAddress, 0, sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(_port);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
