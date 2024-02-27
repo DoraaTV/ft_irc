@@ -80,5 +80,7 @@ private:
     int _maxFd;
     std::map<std::string, Channel*> _channels;
     std::string _password;
-    int operatorAdd(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
+    int  operatorAdd(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
+    void casePasswd(int clientSocket, std::deque<Client>::iterator senderClient, std::vector<std::string> tokens, std::vector<std::string> tokens2);
+    void caseNormal(int clientSocket, std::deque<Client>::iterator senderClient, std::vector<std::string> tokens2);
 };

@@ -1,5 +1,73 @@
 #include "../Serveur.hpp"
 
+int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode);
+int limiteSet(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, char *buffer, std::vector<std::string> tokens);
+int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
+int setTopicMode(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode);
+
+void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
+    // should be /MODE <channel name> <mode> <client name>
+
+    //Parse args and buffer, do checks on channel and client
+    std::vector <std::string> tokens = split(buffer, ' ');
+    if (tokens.size() < 3) {
+        std::string buffer2 = buffer;
+        if (buffer2.find("\n") != std::string::npos)
+            buffer2.erase(buffer2.length() - 1);
+        if (buffer2.find("\r") != std::string::npos)
+            buffer2.erase(buffer2.length() - 1);
+        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer2 + " :Not enough parameters.\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+        return;
+    }
+    std::string channelName = tokens[1];
+    if (channelName.find("\n") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
+    if (channelName.find("\r") != std::string::npos)
+        channelName.erase(channelName.length() - 1);
+    if (!_channels[channelName]) {
+        send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
+        return;
+    }
+    std::string mode2 = tokens[2];
+    const char *mode = mode2.c_str();
+    if (mode2.length() < 2) {
+        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str()), 0);
+        return;
+    }
+    std::vector<Channel *>::iterator it2;
+    for (it2 = senderClient->_channels.begin(); it2 != senderClient->_channels.end(); ++it2) {
+        if ((*it2)->_name == channelName) {
+            senderClient->currentChannel = *it2;
+            break;
+        }
+    }
+    if (it2 == senderClient->_channels.end()) {
+        send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
+        return;
+    }
+    else if (!senderClient->currentChannel->isOperator(senderClient->_name)) {
+        send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
+        return;
+    }
+
+    // Check and execute mode
+    if (inviteOnly(clientSocket, senderClient, mode))
+        return;
+    else if (limiteSet(clientSocket, senderClient, mode, buffer, tokens))
+        return;
+    else if (operatorAdd(clientSocket, senderClient, mode, tokens))
+        return;
+    else if (setPasswd(clientSocket, senderClient, mode, tokens))
+        return;
+    else if (setTopicMode(clientSocket, senderClient, mode))
+        return;
+    else {
+        std::string message = ":localhost 472 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :Unknown mode\r\n";
+        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
+    }
+}
+
 int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode) {
     if (!strncmp(mode, "+i", 2)) {
         senderClient->currentChannel->setInviteOnly(true);
@@ -138,72 +206,4 @@ int setTopicMode(int clientSocket, std::deque<Client>::iterator senderClient, co
         return (1);
     }
     return (0);
-}
-
-void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
-    // should be /MODE <channel name> <mode> <client name>
-    std::vector <std::string> tokens = split(buffer, ' ');
-    if (tokens.size() < 3) {
-        std::string buffer2 = buffer;
-        if (buffer2.find("\n") != std::string::npos)
-            buffer2.erase(buffer2.length() - 1);
-        if (buffer2.find("\r") != std::string::npos)
-            buffer2.erase(buffer2.length() - 1);
-        std::string message = ":localhost 461 " + senderClient->_name + " " + buffer2 + " :Not enough parameters.\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
-        return;
-    }
-    std::string channelName = tokens[1];
-    if (channelName.find("\n") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
-    if (channelName.find("\r") != std::string::npos)
-        channelName.erase(channelName.length() - 1);
-    if (!_channels[channelName]) {
-        send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
-        return;
-    }
-    std::string mode2 = tokens[2];
-    const char *mode = mode2.c_str();
-    if (mode2.length() < 2) {
-        send(clientSocket, ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str(), std::strlen(ERR_NEEDMOREPARAMS(senderClient, "MODE").c_str()), 0);
-        return;
-    }
-    std::vector<Channel *>::iterator it2;
-    for (it2 = senderClient->_channels.begin(); it2 != senderClient->_channels.end(); ++it2) {
-        if ((*it2)->_name == channelName) {
-            senderClient->currentChannel = *it2;
-            break;
-        }
-    }
-    if (it2 == senderClient->_channels.end()) {
-        send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
-        return;
-    }
-    else if (!senderClient->currentChannel->isOperator(senderClient->_name)) {
-        send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
-        return;
-    }
-
-
-    if (inviteOnly(clientSocket, senderClient, mode))
-        return;
-
-
-    else if (limiteSet(clientSocket, senderClient, mode, buffer, tokens))
-        return;
-    
-
-    else if (operatorAdd(clientSocket, senderClient, mode, tokens))
-        return;
-    
-    else if (setPasswd(clientSocket, senderClient, mode, tokens))
-        return;
-
-    else if (setTopicMode(clientSocket, senderClient, mode))
-        return;
-
-    else {
-        std::string message = ":localhost 472 " + senderClient->_name + " " + senderClient->currentChannel->_name + " :Unknown mode\r\n";
-        send(clientSocket, message.c_str(), std::strlen(message.c_str()), 0);
-    }
 }
