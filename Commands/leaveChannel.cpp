@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   leaveChannel.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/27 15:14:08 by thrio             #+#    #+#             */
+/*   Updated: 2024/02/27 15:14:09 by thrio            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Serveur.hpp"
 
 void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {

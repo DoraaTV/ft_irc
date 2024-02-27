@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   joinChannel.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/27 15:14:04 by thrio             #+#    #+#             */
+/*   Updated: 2024/02/27 15:14:05 by thrio            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Serveur.hpp"
 
 void Server::joinChannel(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {

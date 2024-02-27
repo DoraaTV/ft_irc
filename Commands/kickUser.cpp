@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   kickUser.cpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/27 15:14:06 by thrio             #+#    #+#             */
+/*   Updated: 2024/02/27 15:14:07 by thrio            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Serveur.hpp"
 
 void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {

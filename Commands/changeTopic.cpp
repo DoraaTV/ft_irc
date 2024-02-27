@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   changeTopic.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/27 15:13:57 by thrio             #+#    #+#             */
+/*   Updated: 2024/02/27 15:13:58 by thrio            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Serveur.hpp"
 
 void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {

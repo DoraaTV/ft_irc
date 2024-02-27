@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   setMode.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/27 15:14:17 by thrio             #+#    #+#             */
+/*   Updated: 2024/02/27 15:14:18 by thrio            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Serveur.hpp"
 
 int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode);
