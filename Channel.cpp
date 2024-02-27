@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 11:34:32 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/27 20:56:36 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,12 @@ void Channel::ClientLeft(Client &client) {
     if (_operators.size() == 0 && _clients.size() > 0) {
         std::string name2 = _clients.begin()->first;
         addOperator(name2);
+    }
+    else if (_operators.size() == 0 && _clients.size() == 0) {
+        if (_isPasswordProtected)
+            removePasswd();
+        else if (_isInviteOnly)
+            _isInviteOnly = false;
     }
     broadcastMessage(notification);
     nbClients--;

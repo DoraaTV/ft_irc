@@ -18,6 +18,8 @@ void Server::HandleDisconnect(int clientSocket, ssize_t bytesReceived, std::dequ
         // Client trouvé, le supprimer
         // std::string leaveMessage = it->_name + " has left the chat.\n";
         // broadcastMessage(clientSocket, leaveMessage);
+
+        quit(NULL, clientSocket, it);
         _clients.erase(it);
     }
 
