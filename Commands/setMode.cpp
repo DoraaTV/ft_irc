@@ -6,13 +6,13 @@
 /*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:17 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 15:30:31 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/27 16:03:52 by thrio            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Serveur.hpp"
 
-int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode);
+int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
 int limiteSet(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, char *buffer, std::vector<std::string> tokens);
 int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens);
 int setTopicMode(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode);
@@ -63,7 +63,7 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
 
     // Check and execute mode
-    if (inviteOnly(clientSocket, senderClient, mode))
+    if (inviteOnly(clientSocket, senderClient, mode, tokens))
         return;
     else if (limiteSet(clientSocket, senderClient, mode, buffer, tokens))
         return;
@@ -79,8 +79,10 @@ void Server::setMode(char *buffer, int clientSocket, std::deque<Client>::iterato
     }
 }
 
-int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode) {
+int inviteOnly(int clientSocket, std::deque<Client>::iterator senderClient, const char *mode, std::vector<std::string> tokens) {
     if (!strncmp(mode, "+i", 2)) {
+        if (senderClient->currentChannel->_isPasswordProtected)
+            setPasswd(clientSocket, senderClient, "-k", tokens);
         senderClient->currentChannel->setInviteOnly(true);
         send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Invite only added", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Invite only added", "").c_str()), 0);
         return (1);
@@ -185,6 +187,8 @@ int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const
             password.erase(password.length() - 1);
         senderClient->currentChannel->setPasswd(password);
         std::string message = "Password for channel " + senderClient->currentChannel->_name + " has been set to " + password + "\r\n";
+        if (senderClient->currentChannel->_isInviteOnly)
+            inviteOnly(clientSocket, senderClient, "-i", tokens);
         std::cout << message << std::endl;
         // send(clientSocket, message.c_str(), message.length(), 0);
         send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password has been set to", password).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password has been set to", password).c_str()), 0);
