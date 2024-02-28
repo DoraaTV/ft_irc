@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 10:18:09 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 10:52:11 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,8 @@ Channel::Channel(Client &founder, std::string name) : _name(name) {
 Channel::~Channel() {
     for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
         it->second->currentChannel = NULL;
-    std::string message = "Channel " + _name + " has been destroyed !\r\n";
-    broadcastMessage(message);
-    std::cout << "\033[46m" << message << "\033[0m" << std::endl;
+    std::string message = "Channel " + _name + " has been destroyed !";
+    std::cout << "\033[45m" << message << "\033[0m" << std::endl;
     _clients.clear();
 }
 
