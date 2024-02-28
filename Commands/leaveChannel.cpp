@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   leaveChannel.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:08 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:03:43 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 10:18:37 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void Server::leaveChannel(char *buffer, int clientSocket, std::deque<Client>::it
         else
             channelName = *it;
         if (_channels[channelName]) {
-            _channels[channelName]->ClientLeft(*senderClient);
+            _channels[channelName]->ClientLeft(*senderClient, 0);
         }
         else {
             send(clientSocket, ERR_NOSUCHCHANNEL(senderClient,channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);

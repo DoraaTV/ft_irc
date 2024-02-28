@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:30 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:00:18 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 10:17:20 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ class Channel {
         void setLimit(unsigned int limit);
         void setInviteOnly(bool inviteOnly);
         void ClientJoin(Client &client);
-        void ClientLeft(Client &client);
+        void ClientLeft(Client &client, bool isQuit);
         void sendMessage(const std::string &message, Client &sender);
 
         void setPasswd(std::string &passwd);

@@ -40,8 +40,8 @@ std::set<std::string> loadBadWords(const std::string& filename) {
     return badWords;
 }
 
-void sendReactionMessage(int clientSocket) {
-    std::string reactionMessage = "\033[1;31mLangage !\r\n\x03"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
+void sendReactionMessage(int clientSocket, std::string channel) {
+    std::string reactionMessage = "PRIVMSG " + channel +  " :\033[1;31mLangage !\r\n\x03"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
     send(clientSocket, reactionMessage.c_str(), reactionMessage.length(), 0);
 }
 
@@ -75,7 +75,7 @@ int main() {
     std::cout << "Connecté au serveur." << std::endl;
     send(clientSocket, "PASS pass\r\n", 11, 0);
     send(clientSocket, "NICK bot\r\n", 10, 0);
-    send(clientSocket, "JOIN T\r\n", 8, 0);
+    // send(clientSocket, "JOIN T\r\n", 8, 0);
     // Boucle de traitement des messages
     while (true) {
     // Réception du message du serveur IRC
@@ -91,9 +91,23 @@ int main() {
 
         // Vérification du message pour les mots indésirables
         std::string message(buffer);
+
+        //if message start by "INVITE" then join the channel, should receive ":localhost 341 " + client->get_nickname() + " " + nick + " " + channel + "\r\n"
+        if (message.find(":localhost 341") != std::string::npos) {
+            // get the channel name from the message that should be the last word
+            std::cout << "Joining channel :" << message.substr(message.find_last_of(" ") + 1) << std::endl;
+            std::cout << "Message reçu : " << buffer << std::endl;
+            std::string channel = message.substr(message.find_last_of(" ") + 1);
+            std::string joinMessage = "JOIN " + channel + "\r\n";
+            send(clientSocket, joinMessage.c_str(), joinMessage.length(), 0);
+        }
+
+
         if (containsBadWords(message, badWords)) {
             // Envoyer une réaction automatique
-            sendReactionMessage(clientSocket);
+            // get the channel name (should receive :nickname PRIVMSG #channel :message\r\n)
+            std::string channel = message.substr(message.find("PRIVMSG") + 8, message.find(":", message.find("PRIVMSG")) - message.find("PRIVMSG") - 9);
+            sendReactionMessage(clientSocket, channel);
             std::cout << "Message reçu : " << buffer << std::endl;
         }
 

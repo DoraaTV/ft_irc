@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:35:56 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 10:18:09 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,13 +105,14 @@ void Channel::removeOperator(std::string &clientName) {
         _operators.erase(clientName);
 }
 
-void Channel::ClientLeft(Client &client) {
+void Channel::ClientLeft(Client &client, bool isQuit) {
 
     // check if client is in channel
     if (_clients.find(client._name) == _clients.end())
         return;
     std::string notification = ":" + client._name + "@localhost PART " + _name + "\r\n";
-    send((client)._socket, notification.c_str(), notification.length(), 0);
+    if (isQuit == 0)
+        send((client)._socket, notification.c_str(), notification.length(), 0);
     std::cout << "\033[45mClient " +  client._name + " left channel : " << _name << "\033[0m" << std::endl;
     client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
     if (client._channels.size())

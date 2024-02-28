@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:02 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:37:52 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 10:26:42 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,18 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
 
     channelName = tokens[1];
     removeTrailingCarriageReturn(channelName);
+    //set current channel to the channel he wants to invite to
+    std::vector<Channel *>::iterator it2;
+    for (it2 = senderClient->_channels.begin(); it2 != senderClient->_channels.end(); ++it2) {
+        if ((*it2)->_name == channelName) {
+            senderClient->currentChannel = *it2;
+            break;
+        }
+    }
+    if (it2 == senderClient->_channels.end()) {
+        send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
+        return;
+    }
     std::deque<Client>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it)
         if (it->_name == clientToInviteName)

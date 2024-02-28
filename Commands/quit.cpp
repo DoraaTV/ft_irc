@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:15 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:40:04 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 10:18:44 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator s
         if (!it->second)
             continue;
         else {
-            it->second->ClientLeft(*senderClient);
+            it->second->ClientLeft(*senderClient, 1);
         }
     }
 
