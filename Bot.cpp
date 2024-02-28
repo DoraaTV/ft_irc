@@ -41,7 +41,7 @@ std::set<std::string> loadBadWords(const std::string& filename) {
 }
 
 void sendReactionMessage(int clientSocket, std::string channel) {
-    std::string reactionMessage = "PRIVMSG " + channel +  " :\033[1;31mLangage !\r\n\x03"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
+    std::string reactionMessage = "PRIVMSG " + channel +  " :\033[1;31mLangage !\x03\r\n"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
     send(clientSocket, reactionMessage.c_str(), reactionMessage.length(), 0);
 }
 
@@ -98,6 +98,11 @@ int main() {
             std::cout << "Joining channel :" << message.substr(message.find_last_of(" ") + 1) << std::endl;
             std::cout << "Message reçu : " << buffer << std::endl;
             std::string channel = message.substr(message.find_last_of(" ") + 1);
+            // remove the possible \r\n at the end of the channel name
+            if (channel.find("\n") != std::string::npos)
+                channel.erase(channel.length() - 1);
+            if (channel.find("\r") != std::string::npos)
+                channel.erase(channel.length() - 1);
             std::string joinMessage = "JOIN " + channel + "\r\n";
             send(clientSocket, joinMessage.c_str(), joinMessage.length(), 0);
         }
