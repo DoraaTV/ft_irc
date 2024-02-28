@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/05 16:04:27 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:08:51 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 09:35:56 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ Channel::~Channel() {
         it->second->currentChannel = NULL;
     std::string message = "Channel " + _name + " has been destroyed !\r\n";
     broadcastMessage(message);
-    std::cout << message << std::endl;
+    std::cout << "\033[46m" << message << "\033[0m" << std::endl;
     _clients.clear();
 }
 
@@ -58,13 +58,13 @@ std::string Channel::getTopic() {
 
 void Channel::setPasswd(std::string &passwd) {
     _isPasswordProtected = true;
-    std::cout << "channel : " << _name << " password has been set to : " << passwd << std::endl;
+    std::cout << "\033[46mchannel : " << _name << " password has been set to : " << passwd << "\033[0m" << std::endl;
     _password = passwd;
 }
 
 void Channel::removePasswd() {
     _isPasswordProtected = false;
-    std::cout << "channel : " << _name << " password has been removed" << std::endl;
+    std::cout << "\033[45mchannel : " << _name << " password has been removed\033[0m" << std::endl;
     _password = "";
 }
 
@@ -78,7 +78,7 @@ void Channel::ClientJoin(Client &client) {
         send((client)._socket, ERR_INVITEONLYCHAN(client, _name).c_str(), std::strlen(ERR_INVITEONLYCHAN(client, _name).c_str()), 0);
         return;
     }
-    std::cout << "Client " +  client._name + " joined channel : " << _name << std::endl;
+    std::cout << "\033[46mClient " +  client._name + " joined channel : " << _name << "\033[0m" << std::endl;
     _clients[client._name] = &client;
     client._channels.push_back(this);
     client.currentChannel = client._channels.back();
@@ -97,11 +97,11 @@ void Channel::addOperator(std::string &clientName) {
 
     _operators[clientName] = _clients[clientName];
 
-    std::cout << "Operator added to channel " << _name << " : " << clientName << std::endl;
+    std::cout << "\033[46mOperator added to channel " << _name << " : " << clientName << "\033[0m" << std::endl;
 }
 
 void Channel::removeOperator(std::string &clientName) {
-        std::cout << "Operator removed from channel " << _name << " : " << clientName << std::endl;
+        std::cout << "\033[45mOperator removed from channel " << _name << " : " << clientName << "\033[0m" << std::endl;
         _operators.erase(clientName);
 }
 
@@ -112,7 +112,7 @@ void Channel::ClientLeft(Client &client) {
         return;
     std::string notification = ":" + client._name + "@localhost PART " + _name + "\r\n";
     send((client)._socket, notification.c_str(), notification.length(), 0);
-    std::cout << "Client " +  client._name + " left channel : " << _name << std::endl;
+    std::cout << "\033[45mClient " +  client._name + " left channel : " << _name << "\033[0m" << std::endl;
     client._channels.erase(std::remove(client._channels.begin(), client._channels.end(), this), client._channels.end());
     if (client._channels.size())
         client.currentChannel = client._channels.back();

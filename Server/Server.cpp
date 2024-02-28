@@ -75,7 +75,7 @@ void Server::start() {
 
         int result = select(_maxFd + 1, &readSet, NULL, NULL, &timeout);
         if (result == -1) {
-            std::cerr << "Error in select" << std::endl;
+            std::cerr << "\033[41mError in select\033[0m" << std::endl;
             break;
         }
         for (int i = 0; i <= _maxFd; ++i) {
@@ -91,7 +91,6 @@ void Server::start() {
 }
 
 bool Server::checkPassword(std::string commands) {
-    std::cout << "commands: " << commands << std::endl;
     if (_password.empty())
         return (true);
     if (commands.find("PASS") != std::string::npos || commands.find("CAP") != std::string::npos)

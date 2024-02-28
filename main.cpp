@@ -4,13 +4,13 @@
 int main(int ac, char **av) {
     if (ac != 3 || std::strlen(av[1]) > 5)
     {
-        std::cout << "usage: ./irc <port> <password>" << std::endl;
+        std::cout << "\033[41musage: ./irc <port> <password>\033[0m" << std::endl;
         return (1);
     }
     int port = std::atoi(av[1]);
     if (port <= 0)
     {
-        std::cout << "port must be between 1 and 99999" << std::endl;
+        std::cout << "\033[41mport must be between 1 and 99999\033[0m" << std::endl;
         return (1);
     }
     Server server(port, av[2]);

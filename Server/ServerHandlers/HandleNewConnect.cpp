@@ -8,7 +8,7 @@ void Server::handleNewConnection(int _serverSocket) {
     int clientSocket = accept(_serverSocket, reinterpret_cast<struct sockaddr*>(&clientAddress), &clientSize);
 
     if (clientSocket == -1) {
-        std::cerr << "Error accepting connection" << std::endl;
+        std::cerr << "\033[41mError accepting connection\033[0m" << std::endl;
         return;
     }
 
@@ -16,7 +16,7 @@ void Server::handleNewConnection(int _serverSocket) {
     if (clientSocket > _maxFd)
         _maxFd = clientSocket;
 
-    std::cout << "New connection from " << "localhost" << " on socket " << clientSocket << std::endl; //récupérer l'addresse ip dynamiquement
+    std::cout << "\033[46mNew connection from " << "localhost" << " on socket " << clientSocket << "\033[0m" << std::endl; //récupérer l'addresse ip dynamiquement
     //ajout du client dans la liste des clients
     _clients.push_back(Client(clientSocket, ""));
 }

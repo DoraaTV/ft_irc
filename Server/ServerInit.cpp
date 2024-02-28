@@ -3,7 +3,7 @@
 int Server::createSocket() {
     int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
     if (socketDescriptor == -1) {
-        std::cerr << "Error creating socket" << std::endl;
+        std::cerr << "\033[41mError creating socket\033[0m" << std::endl;
         return (-1);
     }
 
@@ -11,7 +11,7 @@ int Server::createSocket() {
     int option_value = 1;
     socklen_t optlen = sizeof(option_value);
     if (setsockopt(socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &option_value, optlen) == -1) {
-        std::cout << "error: setsockopt" << std::endl;
+        std::cout << "\033[41merror: setsockopt\033[0m" << std::endl;
         close(socketDescriptor);
         return (-1);
     }
@@ -27,7 +27,7 @@ int Server::bindSocket() {
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(_serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddress), sizeof(serverAddress)) == -1) {
-        std::cerr << "Error binding socket to address" << std::endl;
+        std::cerr << "\033[41mError binding socket to address\033[0m" << std::endl;
         return (-1);
     }
 
@@ -35,7 +35,7 @@ int Server::bindSocket() {
     // Récupération des informations sur le protocole TCP
     proto = getprotobyname("tcp");
     if (proto == NULL) {
-        std::cout << "error: getprotobyname" << std::endl;
+        std::cout << "\033[41merror: getprotobyname\033[0m" << std::endl;
         return (-1);
     }
 
@@ -46,7 +46,7 @@ int Server::bindSocket() {
     // Récupération des informations de l'addresse ip + port
     socklen_t addr_len = sizeof(serverAddress);
     if (getsockname(_serverSocket, reinterpret_cast<struct sockaddr *>(&serverAddress), &addr_len) == -1) {
-        std::cout << "error: getsockname" << std::endl;
+        std::cout << "\033[41merror: getsockname\033[0m" << std::endl;
         close(_serverSocket);
         return (-1);
     }
@@ -60,7 +60,7 @@ int Server::bindSocket() {
     // Résolution du nom d'hôte
     host = gethostbyname(hostname);
     if (host == NULL) {
-        std::cout << "error: gethostbyname" << std::endl;
+        std::cout << "\033[41merror: gethostbyname\033[0m" << std::endl;
         close(_serverSocket);
         return (-1);
     }
@@ -87,7 +87,7 @@ int Server::bindSocket() {
 
 int Server::listenForConnections() {
     if (listen(_serverSocket, BACKLOG) == -1) {
-        std::cerr << "Error listening on socket" << std::endl;
+        std::cerr << "\033[41mError listening on socket\033[0m" << std::endl;
         return (-1);
     }
     return (0);

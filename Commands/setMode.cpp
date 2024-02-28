@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   setMode.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:17 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 17:11:20 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 09:39:45 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,11 +169,8 @@ int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const
         std::string password = tokens[3];
         removeTrailingCarriageReturn(password);
         senderClient->currentChannel->setPasswd(password);
-        std::string message = "Password for channel " + senderClient->currentChannel->_name + " has been set to " + password + "\r\n";
         if (senderClient->currentChannel->_isInviteOnly)
             inviteOnly(clientSocket, senderClient, "-i", tokens);
-        std::cout << message << std::endl;
-        // send(clientSocket, message.c_str(), message.length(), 0);
         send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password has been set to", password).c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password has been set to", password).c_str()), 0);
         return (1);
     }
@@ -183,8 +180,6 @@ int setPasswd(int clientSocket, std::deque<Client>::iterator senderClient, const
             return (1);
         }
         senderClient->currentChannel->removePasswd();
-        std::string message = "Password for channel " + senderClient->currentChannel->_name + " has been removed\r\n";
-        std::cout << message << std::endl;
         // send(clientSocket, message.c_str(), message.length(), 0);
         send(clientSocket, RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password removed", "").c_str(), std::strlen(RPL_MODE(senderClient, senderClient->currentChannel->_name, "Password removed", "").c_str()), 0);
         return (1);

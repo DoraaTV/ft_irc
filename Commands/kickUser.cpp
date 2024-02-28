@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   kickUser.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:06 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:03:43 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 09:38:08 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void Server::kickUser(char *buffer, int clientSocket, std::deque<Client>::iterat
                 send((client)._socket, notification.c_str(), notification.length(), 0);
                 client.currentChannel = NULL;
                 senderClient->currentChannel->_clients.erase(client._name);
-                std::cout << "Client " << senderClient->_name << " kicked : " << *it << " from channel " << senderClient->currentChannel->_name << std::endl;
+                std::cout << "\033[45mClient " << senderClient->_name << " kicked : " << *it << " from channel " << senderClient->currentChannel->_name << "\033[0m" << std::endl;
                 notification = ":" + senderClient->_name + " KICK " + senderClient->currentChannel->_name + " " + *it + " :Have been kicked from the channel.\r\n";
                 senderClient->currentChannel->broadcastMessage(notification);
                 senderClient->currentChannel->_operators.erase(client._name);

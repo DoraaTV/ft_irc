@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   changeTopic.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:13:57 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:03:07 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 09:37:29 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void Server::changeTopic(char *buffer, int clientSocket, std::deque<Client>::ite
             if (topic[topic.length() - 1] == '\r')
                 topic.erase(topic.length() - 1);
             _channels[channelName]->setTopic(topic);
-            std::cout << "Topic of the channel " << channelName << " has been set to " << topic << std::endl;
+            std::cout << "\033[46mTopic of the channel " << channelName << " has been set to " << topic << "\033[0m" << std::endl;
             std::string message = ":localhost 332 " + senderClient->_name + " " + channelName + " :" + topic + "\r\n";
             _channels[channelName]->broadcastMessage(message);
             return;

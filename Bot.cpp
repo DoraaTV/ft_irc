@@ -41,7 +41,7 @@ std::set<std::string> loadBadWords(const std::string& filename) {
 }
 
 void sendReactionMessage(int clientSocket) {
-    std::string reactionMessage = "\033[1;31mLangage !\r\n"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
+    std::string reactionMessage = "\033[1;31mLangage !\r\n\x03"; // Message en rouge (ca rends le terminal du serveur rouge du coup c'est fun)
     send(clientSocket, reactionMessage.c_str(), reactionMessage.length(), 0);
 }
 

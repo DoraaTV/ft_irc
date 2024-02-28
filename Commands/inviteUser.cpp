@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   inviteUser.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:02 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:03:43 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 09:37:52 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ void Server::inviteUser(char *buffer, int clientSocket, std::deque<Client>::iter
         send(clientSocket, ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str(), std::strlen(ERR_CHANOPPRIVSNEEDED(senderClient, channelName).c_str()), 0);
     }
     else {
-        std::cout << "Client " << senderClient->_name << " has invited client " << clientToInviteName << " to the channel " << senderClient->currentChannel->_name << std::endl;
+        std::cout << "\033[46mClient " << senderClient->_name << " has invited client " << clientToInviteName << " to the channel " << senderClient->currentChannel->_name << "\033[0m" << std::endl;
         if (senderClient->currentChannel->_invited[clientToInviteName]) {
             senderClient->currentChannel->_invited.erase(clientToInviteName);
             std::string message = "Your invitation to " + senderClient->currentChannel->_name + " has been canceled.\r\n";

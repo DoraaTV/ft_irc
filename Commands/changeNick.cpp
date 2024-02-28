@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   changeNick.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: syakovle <syakovle@student.42.fr>          +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:13:54 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 16:03:42 by syakovle         ###   ########.fr       */
+/*   Updated: 2024/02/28 09:41:30 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iterator senderClient) {
 
-    std::cout << senderClient->_name << std::endl;
     std::string newNick = buffer + 5;
     if (newNick.length() <= 1) {
         send(clientSocket, ERR_NONICKNAMEGIVEN(senderClient).c_str(), std::strlen(ERR_NONICKNAMEGIVEN(senderClient).c_str()), 0);
@@ -48,7 +47,7 @@ void Server::changeNick(char *buffer, int clientSocket, std::deque<Client>::iter
         std::string message = ":localhost 001 " + nickname2 + " :Your nickname is now " + nickname2 + "\r\n";
         send(clientSocket, message.c_str(), message.length(), 0);
     }
-    std::cout << "Client " << senderClient->_name << " changed his nickname to " << nickname2 << std::endl;
+    std::cout << "\033[46mClient " << senderClient->_name << " changed his nickname to " << nickname2 << "\033[0m" << std::endl;
     senderClient->nickname = nickname2;
     senderClient->_name = nickname2;
 }

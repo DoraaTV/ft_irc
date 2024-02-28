@@ -4,9 +4,9 @@
 void Server::HandleDisconnect(int clientSocket, ssize_t bytesReceived, std::deque<Client>::iterator &it){
     // Gérer la déconnexion ou l'erreur
     if (bytesReceived == 0) {
-        std::cout << "Connection closed on socket " << clientSocket << std::endl;
+        std::cout << "\033[41mConnection closed on socket\033[0m" << clientSocket << std::endl;
     } else {
-        std::cerr << "Error receiving data on socket " << clientSocket << std::endl;
+        std::cerr << "\033[41mError receiving data on socket\033[0m " << clientSocket << std::endl;
     }
 
     // Fermer la connexion et la supprimer du jeu principal et de la liste des clients
@@ -50,8 +50,7 @@ void Server::HandleLoop(std::string commandlist, int clientSocket, char *buffer,
                 {
                     std::string wrongPassMsg = ":localhost 464 : Connection refused, wrong password, must be " + _password + "\r\n";
                     send(clientSocket, wrongPassMsg.c_str(), wrongPassMsg.length(), 0);
-                    close(it->_socket);std::cout << password.length() << std::endl;
-                    std::cout << _password.length() << std::endl;
+                    close(it->_socket);
                     FD_CLR(clientSocket, &_masterSet);
                     break;
                 }
@@ -101,7 +100,7 @@ void Server::HandleLoop(std::string commandlist, int clientSocket, char *buffer,
 
 void Server::HandleIncomingData(int clientSocket, char *buffer, std::deque<Client>::iterator &it)
 {
-    std::cout << "Received from socket " << clientSocket << ": " << buffer << std::endl;
+    std::cout << "\033[43mReceived from socket " << clientSocket << ": " << buffer << "\033[0m" << std::endl;
     //choisir un nom à la connexion
     it->_input += buffer;
     if (it->_input.find('\n') == std::string::npos)
@@ -125,10 +124,10 @@ void Server::handleExistingConnection(int clientSocket) {
     if (it->_input.find('\n') != std::string::npos)
         it->_input.clear();
     if (it->_name.empty()) {
-        std::cout << "Client " << clientSocket << " is not identified" << std::endl;
+        std::cout << "\033[41mClient " << clientSocket << " is not identified\033[0m" << std::endl;
     }
     else {
-        std::cout << "Client " << clientSocket << " is identified as " << it->_name << std::endl;
+        std::cout << "\033[46mClient " << clientSocket << " is identified as " << it->_name << "\033[0m" << std::endl;
     }
     if (bytesReceived <= 0) {
         HandleDisconnect(clientSocket, bytesReceived, it);

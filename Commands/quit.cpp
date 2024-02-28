@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:14:15 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:26:31 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 09:40:04 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,5 +26,5 @@ void Server::quit(char *buffer, int clientSocket, std::deque<Client>::iterator s
     close(clientSocket);
     _clients.erase(std::remove_if(_clients.begin(), _clients.end(), ClientFinder(clientSocket)), _clients.end());
     FD_CLR(clientSocket, &_masterSet);
-    std::cout << "Client " << senderClient->_name << " has left the server" << std::endl;
+    std::cout << "\033[45mClient " << senderClient->_name << " has left the server\033[0m" << std::endl;
 }

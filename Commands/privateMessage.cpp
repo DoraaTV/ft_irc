@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   privateMessage.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: thrio <thrio@student.42.fr>                +#+  +:+       +#+        */
+/*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:13:50 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/27 17:53:11 by thrio            ###   ########.fr       */
+/*   Updated: 2024/02/28 09:42:50 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,22 +38,17 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
         std::string receiverName = command.substr(0, command.find(" "));
         command = command.substr(space_pos + 1);
         if (space_pos != std::string::npos) {
-            // std::string receiverName = command.substr(0, space_pos);
-            std::cout << "COmmand: " << command << std::endl;
             std::string textToSend = command;
-            // textToSend = command.substr(command.find(" ") + 1);
             if (textToSend[textToSend.length() - 1] == '\n')
             textToSend.erase(textToSend.length() - 1);
             if (textToSend[textToSend.length() - 1] == '\r')
                 textToSend.erase(textToSend.length() - 1);
-            std::cout << command << std::endl;
             std::deque<Client>::iterator it;
             for (it = _clients.begin(); it != _clients.end(); ++it) {
                 std::cout << it->_name << " " << receiverName << std::endl;
                 if (it->_name == receiverName) {
                     if (textToSend[0] == ':')
                         textToSend.erase(0, 1);
-                    std::cout <<  RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str() << std::endl;
                     send(it->_socket, RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str(), std::strlen(RPL_PRIVMSG(senderClient, textToSend, receiverName).c_str()), 0);
                     break;
                 }
