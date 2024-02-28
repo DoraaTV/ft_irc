@@ -27,11 +27,14 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
+bot: $(OBJ)
+	$(CXX) $(CXXFLAGS) Bot.cpp -o BOT -D BOT
+
 clean:
 	$(RM) OBJ/
 
 fclean: clean
-	$(RM) $(NAME)
+	$(RM) $(NAME) BOT
 
 re: fclean $(NAME)
 
