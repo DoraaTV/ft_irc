@@ -6,7 +6,7 @@
 /*   By: parallels <parallels@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/27 15:13:50 by thrio             #+#    #+#             */
-/*   Updated: 2024/02/28 09:42:50 by parallels        ###   ########.fr       */
+/*   Updated: 2024/02/28 10:41:18 by parallels        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ void Server::privateMessage(char *buffer, int clientSocket, std::deque<Client>::
             else {
                 send(clientSocket, ERR_NOTONCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOTONCHANNEL(senderClient, channelName).c_str()), 0);
             }
+        } else {
+            send(clientSocket, ERR_NOSUCHCHANNEL(senderClient, channelName).c_str(), std::strlen(ERR_NOSUCHCHANNEL(senderClient, channelName).c_str()), 0);
         }
         return ;
     }

@@ -4,7 +4,7 @@
 void Server::HandleDisconnect(int clientSocket, ssize_t bytesReceived, std::deque<Client>::iterator &it){
     // Gérer la déconnexion ou l'erreur
     if (bytesReceived == 0) {
-        std::cout << "\033[41mConnection closed on socket\033[0m" << clientSocket << std::endl;
+        std::cout << "\033[41mConnection closed on socket " << clientSocket << "\033[0m" << std::endl;
     } else {
         std::cerr << "\033[41mError receiving data on socket\033[0m " << clientSocket << std::endl;
     }
@@ -127,7 +127,7 @@ void Server::handleExistingConnection(int clientSocket) {
         std::cout << "\033[41mClient " << clientSocket << " is not identified\033[0m" << std::endl;
     }
     else {
-        std::cout << "\033[46mClient " << clientSocket << " is identified as " << it->_name << "\033[0m" << std::endl;
+        std::cout << "\033[42mClient " << clientSocket << " is identified as " << it->_name << "\033[0m" << std::endl;
     }
     if (bytesReceived <= 0) {
         HandleDisconnect(clientSocket, bytesReceived, it);
